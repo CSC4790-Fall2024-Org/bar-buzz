@@ -1,12 +1,37 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import React from 'react';
+import { StatusBar } from 'expo-status-bar';
+import { View , StyleSheet, Dimensions } from 'react-native';
 
 import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 
+import MapView, { Region, Marker } from 'react-native-maps'; 
+
 export default function HomeScreen() {
+  const onRegionChange = (region: Region) => {
+    console.log(region); 
+  };
+
   return (
+    <View style = {styles.container}>
+      <MapView
+        style = {styles.map}
+        onRegionChange = {onRegionChange}
+        initialRegion = {{
+          latitude: 40.0261,
+          longitude: -75.3196,
+          latitudeDelta: 0.0922,
+          longitudeDelta: 0.0421,
+        }}
+      >
+      </MapView>
+      <StatusBar style = "auto" /> 
+    </View>
+  );
+} 
+/*
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
       headerImage={
@@ -49,8 +74,22 @@ export default function HomeScreen() {
     </ParallaxScrollView>
   );
 }
-
+*/
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  }, 
+  map: {
+    width: '100%',
+    height: '100%'
+  }
+});
+
+  
+  /*
   titleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -67,4 +106,6 @@ const styles = StyleSheet.create({
     left: 0,
     position: 'absolute',
   },
+ 
 });
+ */
