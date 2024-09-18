@@ -4,6 +4,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
+import {FlatList} from 'react-native';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 
@@ -26,6 +27,14 @@ export default function RootLayout() {
     return null;
   }
 
+  
+ // const[people, setPeople] = useState([
+   // {name: "Ellie", key:"1"},
+   // {name: "Navi", key:"2"},
+   // {name: "Flips", key:"3"},
+   // {name: "D", key:"3"},
+ // ])
+  
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
