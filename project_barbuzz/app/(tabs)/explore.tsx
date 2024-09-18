@@ -19,9 +19,9 @@ export default function TabTwoScreen() {
         />
       }>
       <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">List of Bars</ThemedText>
+        <ThemedText type="title">Villanova University</ThemedText>
       </ThemedView>
-      <ThemedText>Ideally these would not be drop downs, but actual containers.</ThemedText>
+      <ThemedText>Villanova, PA</ThemedText>
       <Collapsible title="Kelly's Taproom">
         <ThemedText>
           This app has two screens:{' '}
@@ -53,7 +53,7 @@ export default function TabTwoScreen() {
           <ThemedText type="link">Learn more</ThemedText>
         </ExternalLink>
       </Collapsible>
-      <Collapsible title="JD McGillicuddy's">
+      <Collapsible title="Flip & Bailey's">
         <ThemedText>
           Open <ThemedText type="defaultSemiBold">app/_layout.tsx</ThemedText> to see how to load{' '}
           <ThemedText style={{ fontFamily: 'SpaceMono' }}>
@@ -61,16 +61,6 @@ export default function TabTwoScreen() {
           </ThemedText>
         </ThemedText>
         <ExternalLink href="https://docs.expo.dev/versions/latest/sdk/font">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="JJ Bootleggers">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user's current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
           <ThemedText type="link">Learn more</ThemedText>
         </ExternalLink>
       </Collapsible>
@@ -93,7 +83,7 @@ const styles = StyleSheet.create({
     height: 250,
     width: 400,
     bottom: 0,
-    left: 150,
+    left: 5,
     position: 'absolute',
   },
 });
