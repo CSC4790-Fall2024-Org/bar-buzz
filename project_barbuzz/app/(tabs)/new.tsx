@@ -1,68 +1,81 @@
-import { Image, StyleSheet, Platform } from 'react-native';
-
-import ParallaxScrollView from '@/components/ParallaxScrollView';
+import { StyleSheet, View, Image } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 
 export default function HomeScreen() {
+  const name = "Your Name";       // Replace with your name
+  const school = "Villanova University";   // Replace with your school
+  const monthlyRecap = ""; // Replace with your recap
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/villanova-campus.jpg')}
-          style={styles.reactLogo}
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        {/* Person Logo */}
+        <Image 
+          source={require('@/assets/images/usericon.png')}  // Replace with your logo image path
+          style={styles.logo}
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Profile Page</ThemedText>
+        {/* Name and School */}
+        <View style={styles.headerTextContainer}>
+          <ThemedText type="title" style={styles.name}>{name}</ThemedText>
+          <ThemedText type="subtitle" style={styles.school}>{school}</ThemedText>
+        </View>
+      </View>
+      {/* Monthly Recap */}
+      <ThemedView style={styles.contentContainer}>
+        <ThemedText type="title" style={styles.recapTitle}>Monthly Recap</ThemedText>
+        <ThemedText style={styles.recapText}>{monthlyRecap}</ThemedText>
       </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">most visited</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({ ios: 'cmd + d', android: 'cmd + m' })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">settings</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">privacy etc.</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+    backgroundColor: '#ffffff', // Set background color to white
+  },
+  header: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 8,
+    height: '33%', // Takes up top third of screen
+    padding: 16,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  logo: {
+    width: 150, // Increased size for the logo
+    height: 150, // Increased size for the logo
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  headerTextContainer: {
+    alignItems: 'flex-end',
+    flex: 1,
+    justifyContent: 'center',
+    paddingRight: 16, // Optional padding to add some space on the right
+  },
+  name: {
+    fontSize: 70, 
+    fontWeight: 'bold',
+  },
+  school: {
+    fontSize: 40,
+    color: '#0033A0', // Blue color for "Villanova University"
+    marginTop: 10, // Added margin to push the school name down
+  },
+  contentContainer: {
+    flex: 1,
+    justifyContent: 'flex-start', // Align items at the top of the container
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 30, // Reduced padding to move "Monthly Recap" higher up
+  },
+  recapTitle: {
+    fontSize: 40,
+    fontWeight: 'bold',
+    marginBottom: 15,
+  },
+  recapText: {
+    fontSize: 18,
+    textAlign: 'center',
   },
 });
