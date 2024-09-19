@@ -6,9 +6,13 @@ import { ExternalLink } from '@/components/ExternalLink';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { useNavigate } from 'react-router-dom';
+import { FlatList } from 'react-native-gesture-handler';
+
 
 export default function TabTwoScreen() {
 
+  
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
@@ -22,6 +26,7 @@ export default function TabTwoScreen() {
         <ThemedText type="title">Villanova University</ThemedText>
       </ThemedView>
       <ThemedText>Villanova, PA</ThemedText>
+      
       <Collapsible title="Kelly's Taproom">
         <ThemedText>
           This app has two screens:{' '}
@@ -36,6 +41,7 @@ export default function TabTwoScreen() {
           <ThemedText type="link">Learn more</ThemedText>
         </ExternalLink>
       </Collapsible>
+      
       <Collapsible title="The Grog Bar & Grill">
         <ThemedText>
           You can open this project on Android, iOS, and the web. To open the web version, press{' '}
@@ -67,6 +73,7 @@ export default function TabTwoScreen() {
     </ParallaxScrollView>
   );
 }
+
 
 const styles = StyleSheet.create({
   headerImage: {
