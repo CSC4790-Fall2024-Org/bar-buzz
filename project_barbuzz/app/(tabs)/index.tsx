@@ -32,7 +32,7 @@ export default function HomeScreen() {
       </ThemedView>
       <ThemedView style={styles.stepContainer}>
         <ThemedText type="subtitle">list of bars and locations</ThemedText>
-        <ThemedText>
+        <ThemedText> 
           Tap the Explore tab to learn more about what's included in this starter app.
         </ThemedText>
       </ThemedView>
