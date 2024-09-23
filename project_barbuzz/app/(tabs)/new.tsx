@@ -5,7 +5,7 @@ import { ThemedView } from '@/components/ThemedView';
 export default function HomeScreen() {
   const name = "Your Name";       // Replace with your name
   const school = "Villanova University";   // Replace with your school
-  const monthlyRecap = ""; // Replace with your recap
+  const monthlyRecap = "You went to the Grog 7 times this month!"; // Replace with your recap
 
   return (
     <View style={styles.container}>
@@ -13,7 +13,7 @@ export default function HomeScreen() {
       <View style={styles.header}>
         {/* Person Logo */}
         <Image 
-          source={require('@/assets/images/usericon.png')}  // Replace with your logo image path
+          source={require('@/assets/images/usericon.png')}  
           style={styles.logo}
         />
         {/* Name and School */}
@@ -27,6 +27,10 @@ export default function HomeScreen() {
         <ThemedText type="title" style={styles.recapTitle}>Monthly Recap</ThemedText>
         <ThemedText style={styles.recapText}>{monthlyRecap}</ThemedText>
       </ThemedView>
+      {/* Grog Superstar Text */}
+      <View style={styles.footer}>
+        <ThemedText style={styles.footerText}>You are a Grog superstar!</ThemedText>
+      </View>
     </View>
   );
 }
@@ -34,40 +38,39 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff', // Set background color to white
+    backgroundColor: '#ffffff', //white
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    height: '33%', // Takes up top third of screen
+    height: '33%', 
     padding: 16,
   },
   logo: {
-    width: 150, // Increased size for the logo
-    height: 150, // Increased size for the logo
+    width: 150, 
+    height: 150, 
   },
   headerTextContainer: {
-    alignItems: 'flex-end',
     flex: 1,
     justifyContent: 'center',
-    paddingRight: 16, // Optional padding to add some space on the right
+    alignItems: 'flex-end', // Right-align text
   },
   name: {
     fontSize: 70, 
     fontWeight: 'bold',
   },
   school: {
-    fontSize: 40,
-    color: '#0033A0', // Blue color for "Villanova University"
-    marginTop: 10, // Added margin to push the school name down
+    fontSize: 35,
+    color: '#0033A0', // Blue color 
+    marginTop: 10, 
   },
   contentContainer: {
     flex: 1,
-    justifyContent: 'flex-start', // Align items at the top of the container
+    justifyContent: 'flex-start', 
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingTop: 30, // Reduced padding to move "Monthly Recap" higher up
+    paddingTop: 30, 
   },
   recapTitle: {
     fontSize: 40,
@@ -77,5 +80,15 @@ const styles = StyleSheet.create({
   recapText: {
     fontSize: 18,
     textAlign: 'center',
+  },
+  footer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingBottom: 20,
+  },
+  footerText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#0033A0', // Blue color 
   },
 });
