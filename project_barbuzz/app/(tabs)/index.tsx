@@ -212,8 +212,6 @@ const styles = StyleSheet.create({
   },
 });
 
-
-
 /* original code
 import { Image, StyleSheet, Platform } from 'react-native';
 
