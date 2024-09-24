@@ -4,7 +4,6 @@ import { FlatList } from 'react-native-gesture-handler';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { useRouter } from 'expo-router';  // Use router hook
 
 interface Item {
@@ -37,30 +36,21 @@ const TabTwoScreen: React.FC = () => {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <ParallaxScrollView
-        headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-        headerImage={
-          <Image
-            source={require('@/assets/images/BBlogo.png')}
-            style={styles.BBlogo}
-          />
+      <FlatList
+        ListHeaderComponent={
+          <ThemedView style={styles.headerContainer}>
+            <Image
+              source={require('@/assets/images/BBlogo.png')}
+              style={styles.BBlogo}
+            />
+            <ThemedText style={styles.title}>Villanova University</ThemedText>
+            <ThemedText style={styles.subtitle}>Villanova, PA</ThemedText>
+          </ThemedView>
         }
-      >
-        {/* Sticky Header */}
-        <FlatList
-          data={DATA}
-          renderItem={renderItem}
-          keyExtractor={item => item.key}
-          // Add the sticky header to keep the title visible when scrolling
-          stickyHeaderIndices={[0]}  // Index 0 is the header (Villanova title)
-          ListHeaderComponent={
-            <ThemedView style={styles.titleContainer}>
-              <ThemedText style={styles.title}>Villanova University</ThemedText>
-              <ThemedText style={styles.subtitle}>Villanova, PA</ThemedText>
-            </ThemedView>
-          }
-        />
-      </ParallaxScrollView>
+        data={DATA}
+        renderItem={renderItem}
+        keyExtractor={item => item.key}
+      />
     </GestureHandlerRootView>
   );
 };
@@ -78,10 +68,8 @@ const styles = StyleSheet.create({
     fontSize: 22,
     backgroundColor: 'white',
   },
-  titleContainer: {
-    padding: 20,
+  headerContainer: {
     alignItems: 'center',
-    backgroundColor: 'white',  // Ensure background is white so it stands out
   },
   title: {
     fontSize: 25,
