@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
   superstarText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#0033A0',  // Blue color
+    color: '#000000',  
   },
   visitsContainer: {
     paddingHorizontal: 16,
