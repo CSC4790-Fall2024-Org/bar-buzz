@@ -49,6 +49,8 @@ const handleDobChange = (input: string) => {
   const handleSignUp = async () => {
     console.log("Button Clicked!"); // Check if the button press is registering
 
+    
+
     // Validate the email and date of birth before proceeding
     if (!email.endsWith('@villanova.edu')) {
       Alert.alert('Invalid Email', 'Please use a Villanova email address.');
@@ -66,9 +68,10 @@ const handleDobChange = (input: string) => {
     const [month, day, year] = dob.split('/');
     const formattedDob = `${year}-${month}-${day}`;
 
+
     try {
-      console.log("Sending request to backend...");
-      const response = await axios.post('http://localhost:8081/', {
+      console.log("Sending request to backend...", name, email, formattedDob, password);
+      const response = await axios.post('http://localhost:8082/signup', {
         name,
         email,
         dob: formattedDob, // Use the formatted date here
