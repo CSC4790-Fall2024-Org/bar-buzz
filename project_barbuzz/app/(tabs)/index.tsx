@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, View, Text, TextInput, StyleSheet, TouchableOpacity, Image, Platform } from 'react-native';
+import { Modal, View, Text, TextInput, StyleSheet, TouchableOpacity, Image, Platform, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -11,6 +12,7 @@ export default function HomeScreen() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [dob, setDob] = useState('');
+  const [password, setPassword] = useState('');
 
   // Check if the user is already signed up when the component mounts
   useEffect(() => {
@@ -27,13 +29,63 @@ export default function HomeScreen() {
     checkUserSignUpStatus();
   }, []);
 
+  // Function to format date as MM/DD/YYYY automatically
+  // Update the function definition to include the input type
+const handleDobChange = (input: string) => {
+  // Remove all non-digit characters
+  const cleaned = input.replace(/[^\d]/g, '');
+
+  // Format date as MM/DD/YYYY
+  let formatted = cleaned;
+  if (cleaned.length > 2) {
+    formatted = `${cleaned.slice(0, 2)}/${cleaned.slice(2)}`;
+  }
+  if (cleaned.length > 4) {
+    formatted = `${cleaned.slice(0, 2)}/${cleaned.slice(2, 4)}/${cleaned.slice(4)}`;
+  }
+  setDob(formatted);
+};
+
   const handleSignUp = async () => {
+    console.log("Button Clicked!"); // Check if the button press is registering
+
+    // Validate the email and date of birth before proceeding
+    if (!email.endsWith('@villanova.edu')) {
+      Alert.alert('Invalid Email', 'Please use a Villanova email address.');
+      return;
+    }
+
+    const birthYear = new Date(dob).getFullYear();
+    const currentYear = new Date().getFullYear();
+    if (currentYear - birthYear < 21) {
+      Alert.alert('Age Restriction', 'You must be 21+ to sign up.');
+      return;
+    }
+
+    // Format the date to 'YYYY-MM-DD'
+    const [month, day, year] = dob.split('/');
+    const formattedDob = `${year}-${month}-${day}`;
+
     try {
-      // Store sign-up status and hide modal
-      await AsyncStorage.setItem('isSignedUp', 'true');
-      setModalVisible(false);
+      console.log("Sending request to backend...");
+      const response = await axios.post('http://localhost:8081/', {
+        name,
+        email,
+        dob: formattedDob, // Use the formatted date here
+        password
+      });
+      console.log("Response from backend:", response);
+
+      if (response.status === 201) {
+        await AsyncStorage.setItem('isSignedUp', 'true');
+        setModalVisible(false);
+        Alert.alert('Success', `Welcome to BarBuzz, ${name}!`);
+      } else {
+        Alert.alert('Sign-Up Failed', 'Please try again later.');
+      }
     } catch (error) {
-      console.error('Error saving sign-up status', error);
+      console.error('Error signing up', error);
+      Alert.alert('Error', 'An error occurred while signing up. Please try again later.');
     }
   };
 
@@ -73,16 +125,30 @@ export default function HomeScreen() {
               />
             </View>
 
-            {/* Date of Birth Input */}
+            {/* Date of Birth Input with Auto-Formatting */}
             <View style={styles.inputContainer}>
               <Text style={styles.inputLabel}>Enter your Date of Birth*</Text>
               <TextInput
                 value={dob}
-                onChangeText={setDob}
+                onChangeText={handleDobChange}
                 style={styles.input}
                 placeholder="MM/DD/YYYY"
+                maxLength={10} // Limit to MM/DD/YYYY
+                keyboardType="number-pad"
               />
               <Text style={styles.ageRestrictionText}>You must be 21+ to sign up</Text>
+            </View>
+
+            {/* Password Input */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Enter your Password*</Text>
+              <TextInput
+                value={password}
+                onChangeText={setPassword}
+                style={styles.input}
+                secureTextEntry
+                placeholder="Your password"
+              />
             </View>
 
             {/* Submit Button */}
@@ -211,80 +277,3 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
 });
-
-
-
-/* original code
-import { Image, StyleSheet, Platform } from 'react-native';
-
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-
-
-export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome to BarBuzz!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Create map for home page</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({ ios: 'cmd + d', android: 'cmd + m' })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">list of bars and locations</ThemedText>
-        <ThemedText> 
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">profile page</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
-  );
-}
-
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
-
-*/ 
