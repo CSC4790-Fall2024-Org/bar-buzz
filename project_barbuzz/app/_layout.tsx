@@ -29,11 +29,19 @@ export default function RootLayout() {
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <SafeAreaView style={{ flex: 1 }}>
         <Stack>
+          {/* Hide header for (tabs) */}
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="+not-found" />
+
+          {/* Define other screens with headers */}
+          <Stack.Screen name="detail" options={{ title: 'Detail' }} />
+          <Stack.Screen name="+not-found" options={{ headerShown: false }} />
         </Stack>
       </SafeAreaView>
     </ThemeProvider>
   );
 }
+
+
+
+
 

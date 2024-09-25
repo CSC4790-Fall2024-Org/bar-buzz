@@ -1,11 +1,27 @@
-import { StyleSheet, View, Image } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import React from 'react';
+import { StyleSheet, View, Image, Dimensions } from 'react-native';  // Import Dimensions for dynamic width
+import { ThemedText } from '@/components/ThemedText';  // Ensure these paths and exports are correct
+import { ThemedView } from '@/components/ThemedView';  // Ensure these paths and exports are correct
+import * as Progress from 'react-native-progress';  // Use cross-platform progress bar library
+
+const screenWidth = Dimensions.get('window').width;  // Get screen width for responsive design
 
 export default function HomeScreen() {
-  const name = "Your Name";       // Replace with your name
-  const school = "Villanova University";   // Replace with your school
-  const monthlyRecap = "You went to the Grog 7 times this month!"; // Replace with your recap
+  const name = "Name";  // Replace with your name
+  const school = "Villanova University";  // Replace with your school
+
+  const visits = [
+    { name: "The Grog", visits: 35 },
+    { name: "Kelly's", visits: 4 },
+    { name: "McSorley's", visits: 10 },
+    { name: "Flips", visits: 20 },
+  ];
+
+  // Sum of all visits
+  const totalVisits = visits.reduce((acc, place) => acc + place.visits, 0);
+
+  // Define an array of colors corresponding to each bar
+  const barColors = ['#b19cd9', '#3b5998', '#ff4500', '#ffa500'];
 
   return (
     <View style={styles.container}>
@@ -13,7 +29,7 @@ export default function HomeScreen() {
       <View style={styles.header}>
         {/* Person Logo */}
         <Image 
-          source={require('@/assets/images/usericon.png')}  
+          source={require('@/assets/images/usericon.png')}  // Ensure this path is correct
           style={styles.logo}
         />
         {/* Name and School */}
@@ -22,14 +38,50 @@ export default function HomeScreen() {
           <ThemedText type="subtitle" style={styles.school}>{school}</ThemedText>
         </View>
       </View>
+
       {/* Monthly Recap */}
       <ThemedView style={styles.contentContainer}>
         <ThemedText type="title" style={styles.recapTitle}>Monthly Recap</ThemedText>
-        <ThemedText style={styles.recapText}>{monthlyRecap}</ThemedText>
+        {/* Bar Chart */}
+        <View style={styles.chartContainer}>
+          {visits.map((place, index) => (
+            <View key={index} style={styles.chartBarContainer}>
+              <View 
+                style={[
+                  styles.chartBar, 
+                  { height: (place.visits / totalVisits) * 150, backgroundColor: barColors[index] },  // Dynamic height & color
+                ]} 
+              />
+              <ThemedText style={styles.barLabel}>{place.name}</ThemedText>
+            </View>
+          ))}
+        </View>
       </ThemedView>
-      {/* Grog Superstar Text */}
-      <View style={styles.footer}>
-        <ThemedText style={styles.footerText}>You are a Grog superstar!</ThemedText>
+
+      {/* Superstar Section */}
+      <View style={styles.superstarContainer}>
+        <ThemedText style={styles.superstarText}>You are a Grog Superstar!</ThemedText>
+      </View>
+
+      {/* Visit Progress */}
+      <View style={styles.visitsContainer}>
+        {visits.map((place, index) => (
+          <View key={index} style={styles.visitRow}>
+            <ThemedText style={styles.visitText}>
+              {place.visits}/{totalVisits} Visits to {place.name}
+            </ThemedText>
+            {/* Progress bar adjusted to full width */}
+            <Progress.Bar 
+              progress={place.visits / totalVisits} 
+              width={screenWidth * 0.9}  // Set width dynamically relative to screen width
+              color={barColors[index]}  // Use the same color as the bar
+              style={styles.progressBar} 
+              borderRadius={10}  // Smooth bar edges
+              height={12}  // Adjust height for better appearance
+              unfilledColor="#e0e0e0"  // Color of the unfilled portion
+            />
+          </View>
+        ))}
       </View>
     </View>
   );
@@ -38,57 +90,79 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff', //white
+    backgroundColor: '#ffffff', // white
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    height: '33%', 
     padding: 16,
+    height: '20%',
   },
   logo: {
-    width: 150, 
-    height: 150, 
+    width: 80,
+    height: 80,
   },
   headerTextContainer: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'flex-end', // Right-align text
+    marginLeft: 16,
   },
   name: {
-    fontSize: 70, 
+    fontSize: 24,
     fontWeight: 'bold',
   },
   school: {
-    fontSize: 35,
-    color: '#0033A0', // Blue color 
-    marginTop: 10, 
+    fontSize: 16,
+    color: '#666',  // Gray color
   },
   contentContainer: {
-    flex: 1,
-    justifyContent: 'flex-start', 
-    alignItems: 'center',
     paddingHorizontal: 16,
-    paddingTop: 30, 
+    paddingTop: 20,
   },
   recapTitle: {
-    fontSize: 40,
+    fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 15,
   },
-  recapText: {
-    fontSize: 18,
-    textAlign: 'center',
+  chartContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'flex-end',  // Align bars to the bottom
+    height: 150,  // Set a fixed height for the chart
   },
-  footer: {
+  chartBarContainer: {
     justifyContent: 'center',
     alignItems: 'center',
-    paddingBottom: 20,
   },
-  footerText: {
-    fontSize: 20,
+  chartBar: {
+    width: 30,
+    backgroundColor: '#b19cd9',  // Default bar color (Grog)
+  },
+  barLabel: {
+    marginTop: 10,
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  superstarContainer: {
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+  superstarText: {
+    fontSize: 18,
     fontWeight: 'bold',
-    color: '#0033A0', // Blue color 
+    color: '#0033A0',  // Blue color
+  },
+  visitsContainer: {
+    paddingHorizontal: 16,
+  },
+  visitRow: {
+    marginBottom: 20,
+  },
+  visitText: {
+    fontSize: 16,
+    marginBottom: 8,
+  },
+  progressBar: {
+    alignSelf: 'center',
   },
 });
