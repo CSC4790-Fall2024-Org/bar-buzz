@@ -9,8 +9,10 @@ const DetailScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      <ThemedText style={styles.text}>People at {barName}</ThemedText>
       <ThemedText style={styles.text}>Ellie McLaughlin</ThemedText>
-      <ThemedText style={styles.text}>You are viewing details for: {barName}</ThemedText>
+      <ThemedText style={styles.text}>Navi Singh</ThemedText>
+      <ThemedText style={styles.text}>Christina Alskewycz</ThemedText>
     </View>
   );
 };
@@ -18,8 +20,7 @@ const DetailScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    //alignItems: 'center',
     backgroundColor: 'white', // or your themed background color
   },
   text: {

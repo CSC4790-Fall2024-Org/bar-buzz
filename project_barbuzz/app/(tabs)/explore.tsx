@@ -67,17 +67,18 @@ const styles = StyleSheet.create({
   item: {
     fontSize: 22,
     backgroundColor: 'white',
+    padding: 2,
   },
   headerContainer: {
     alignItems: 'center',
   },
   title: {
-    fontSize: 25,
+    fontSize: 24,
     fontWeight: 'bold',
     color: 'black',
   },
   subtitle: {
-    fontSize: 18,
+    fontSize: 21,
     color: 'gray',
   },
   BBlogo: {

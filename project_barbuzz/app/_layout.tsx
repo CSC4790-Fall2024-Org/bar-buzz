@@ -33,7 +33,7 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
 
           {/* Define other screens with headers */}
-          <Stack.Screen name="detail" options={{ title: 'Detail' }} />
+          <Stack.Screen name="detail" options={{ title: 'Friends' }} />
           <Stack.Screen name="+not-found" options={{ headerShown: false }} />
         </Stack>
       </SafeAreaView>
