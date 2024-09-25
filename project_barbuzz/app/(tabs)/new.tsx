@@ -129,6 +129,16 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 15,
   },
+  chartBackground: {
+    backgroundColor: '#ffffff', // White background
+    padding: 10,  // Optional padding for visual appeal
+    borderRadius: 10,  // Optional rounded corners
+    elevation: 3,  // Optional shadow for Android
+    shadowColor: '#000',  // Optional shadow color for iOS
+    shadowOffset: { width: 0, height: 1 },  // Optional shadow offset for iOS
+    shadowOpacity: 0.2,  // Optional shadow opacity for iOS
+    shadowRadius: 1,  // Optional shadow radius for iOS
+  },
   chartContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
