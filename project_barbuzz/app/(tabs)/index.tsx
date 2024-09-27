@@ -44,6 +44,8 @@ export default function HomeScreen() {
     console.log(region);
   };
 
+  
+
   // Check if the user is already signed up when the component mounts
   useEffect(() => {
     const checkUserSignUpStatus = async () => {
