@@ -13,6 +13,7 @@ const DetailScreen: React.FC = () => {
       <ThemedText style={styles.text}>Ellie McLaughlin</ThemedText>
       <ThemedText style={styles.text}>Navi Singh</ThemedText>
       <ThemedText style={styles.text}>Christina Alskewycz</ThemedText>
+      <ThemedText style={styles.text}>Ms.O</ThemedText>
     </View>
   );
 };
