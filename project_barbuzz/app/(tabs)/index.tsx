@@ -138,10 +138,10 @@ export default function HomeScreen() {
           style={styles.map}
           onRegionChange={onRegionChange}
           initialRegion={{
-            latitude: 40.0219,
-            latitudeDelta: 0.01,
-            longitude: -75.3188,
-            longitudeDelta: 0.01,
+            latitude: 40.01551675895906,
+            latitudeDelta: 0.06980335542762361,
+            longitude: -75.31918823899272,
+            longitudeDelta: 0.05196722949045807,
           }}
         >
           {showLocationsOfInterest.map((location, index) => (
