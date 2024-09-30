@@ -7,24 +7,40 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { HelloWave } from '@/components/HelloWave';
 import { StatusBar } from 'expo-status-bar';
-import MapView, {Marker, Region} from 'react-native-maps';
+import MapView, { Marker, Region } from 'react-native-maps';
 
 let showLocationsOfInterest = [
   {
-    title:"Grog",
-    location:{
-      latitude: 40.0221,
-      longitude: -75.3204
+    title: "The Grog Bar & Grill",
+    location: {
+      latitude: 40.02257990031775,
+      longitude: -75.32031440725875
     },
-    description: "My first marker"
+    description: "The Grog Bar & Grill"
   },
   {
-    title:"Kellys",
-    location:{
+    title: "Kelly's Taproom",
+    location: {
       latitude: 40.02458,
       longitude: -75.32429
     },
-    description: "My second marker"
+    description: "Kelly's Taproom"
+  },
+  {
+    title: "McSoreley's Ale House",
+    location: {
+      latitude: 39.993037576566806,
+      longitude: -75.29751787647021
+    },
+    description: "McSoreley's Ale House"
+  },
+  {
+    title: "Flip & Bailey's",
+    location: {
+      latitude: 40.02547645051331,
+      longitude: -75.33737617922777
+    },
+    description: "Flip & Bailey's"
   }
 ]
 
@@ -44,8 +60,6 @@ export default function HomeScreen() {
     console.log(region);
   };
 
-  
-
   // Check if the user is already signed up when the component mounts
   useEffect(() => {
     const checkUserSignUpStatus = async () => {
@@ -62,28 +76,22 @@ export default function HomeScreen() {
   }, []);
 
   // Function to format date as MM/DD/YYYY automatically
-  // Update the function definition to include the input type
-const handleDobChange = (input: string) => {
-  // Remove all non-digit characters
-  const cleaned = input.replace(/[^\d]/g, '');
+  const handleDobChange = (input: string) => {
+    const cleaned = input.replace(/[^\d]/g, '');
 
-  // Format date as MM/DD/YYYY
-  let formatted = cleaned;
-  if (cleaned.length > 2) {
-    formatted = `${cleaned.slice(0, 2)}/${cleaned.slice(2)}`;
-  }
-  if (cleaned.length > 4) {
-    formatted = `${cleaned.slice(0, 2)}/${cleaned.slice(2, 4)}/${cleaned.slice(4)}`;
-  }
-  setDob(formatted);
-};
+    let formatted = cleaned;
+    if (cleaned.length > 2) {
+      formatted = `${cleaned.slice(0, 2)}/${cleaned.slice(2)}`;
+    }
+    if (cleaned.length > 4) {
+      formatted = `${cleaned.slice(0, 2)}/${cleaned.slice(2, 4)}/${cleaned.slice(4)}`;
+    }
+    setDob(formatted);
+  };
 
   const handleSignUp = async () => {
-    console.log("Button Clicked!"); // Check if the button press is registering
+    console.log("Button Clicked!");
 
-    
-
-    // Validate the email and date of birth before proceeding
     if (!email.endsWith('@villanova.edu')) {
       Alert.alert('Invalid Email', 'Please use a Villanova email address.');
       return;
@@ -96,17 +104,15 @@ const handleDobChange = (input: string) => {
       return;
     }
 
-    // Format the date to 'YYYY-MM-DD'
     const [month, day, year] = dob.split('/');
     const formattedDob = `${year}-${month}-${day}`;
-
 
     try {
       console.log("Sending request to backend...", name, email, formattedDob, password);
       const response = await axios.post('http://localhost:8082/signup', {
         name,
         email,
-        dob: formattedDob, // Use the formatted date here
+        dob: formattedDob,
         password
       });
       console.log("Response from backend:", response);
@@ -126,23 +132,42 @@ const handleDobChange = (input: string) => {
 
   return (
     <>
-      {/* map */}
-
+      {/* Map with markers */}
       <View style={styles.container}>
-              <MapView 
-                  style ={styles.map}
-                  onRegionChange={onRegionChange}
-                  initialRegion={{
-                    latitude: 40.0219,
-                    latitudeDelta: 0.01,
-                    longitude: -75.3188,
-                    longitudeDelta: 0.01,
-                  }}
-                >
-              </MapView>
-              <StatusBar style="auto"/>
+        <MapView 
+          style={styles.map}
+          onRegionChange={onRegionChange}
+          initialRegion={{
+            latitude: 40.0219,
+            latitudeDelta: 0.01,
+            longitude: -75.3188,
+            longitudeDelta: 0.01,
+          }}
+        >
+          {showLocationsOfInterest.map((location, index) => (
+            <Marker
+              key={index}
+              coordinate={{
+                latitude: location.location.latitude,
+                longitude: location.location.longitude,
+              }}
+              title={location.title}
+              description={location.description}
+              pinColor={
+                index % 4 === 0 
+                  ? 'green'  // First pin
+                  : index % 4 === 1 
+                  ? 'blue'   // Second pin
+                  : index % 4 === 2 
+                  ? 'red'    // Third pin
+                  : 'orange' // Fourth pin
+              }
+          
+            />
+          ))}
+        </MapView>
+        <StatusBar style="auto"/>
       </View>
-
 
       {/* Sign-up modal */}
       <Modal
@@ -186,7 +211,7 @@ const handleDobChange = (input: string) => {
                 onChangeText={handleDobChange}
                 style={styles.input}
                 placeholder="MM/DD/YYYY"
-                maxLength={10} // Limit to MM/DD/YYYY
+                maxLength={10}
                 keyboardType="number-pad"
               />
               <Text style={styles.ageRestrictionText}>You must be 21+ to sign up</Text>
@@ -204,7 +229,6 @@ const handleDobChange = (input: string) => {
               />
             </View>
 
-      
             {/* Submit Button */}
             <TouchableOpacity style={styles.submitButton} onPress={handleSignUp}>
               <Text style={styles.submitButtonText}>Let’s Go!</Text>
@@ -212,7 +236,6 @@ const handleDobChange = (input: string) => {
           </View>
         </View>
       </Modal>
-
     </>
   );
 }
@@ -254,7 +277,7 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 16,
     marginBottom: 5,
-    fontWeight: 'normal', // Unbold the label
+    fontWeight: 'normal',
   },
   input: {
     width: '100%',
@@ -270,7 +293,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   submitButton: {
-    backgroundColor: '#6FCF97', // Yellow submit button
+    backgroundColor: '#6FCF97',
     padding: 15,
     borderRadius: 5,
     width: '100%',
