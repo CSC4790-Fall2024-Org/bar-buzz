@@ -46,6 +46,7 @@ export default function HomeScreen() {
   const [email, setEmail] = useState('');
   const [dob, setDob] = useState('');
   const [password, setPassword] = useState('');
+  const [pinModalVisible, setPinModalVisible] = useState(false); 
   const mapRef = useRef<MapView | null>(null);
 
   const onRegionChange = (region: Region) => {
@@ -61,6 +62,9 @@ export default function HomeScreen() {
         longitudeDelta: 0.01,
       }, 1000);
     }
+  };
+  const handleMarkerPress = () => {
+    setPinModalVisible(true); // Show the blank box modal
   };
 
   useEffect(() => {
@@ -156,6 +160,7 @@ export default function HomeScreen() {
                   ? 'red'    
                   : 'orange' 
               }
+              onPress={handleMarkerPress}
             />
           ))}
         </MapView>
@@ -238,6 +243,24 @@ export default function HomeScreen() {
             {/* Submit Button */}
             <TouchableOpacity style={styles.submitButton} onPress={handleSignUp}>
               <Text style={styles.submitButtonText}>Let’s Go!</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Blank Box Modal when a pin is clicked */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={pinModalVisible}
+        onRequestClose={() => setPinModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.blankBox}>
+            <Text>Are you currently here?</Text>
+            <Text>Are you planning to attend?</Text>
+            <TouchableOpacity onPress={() => setPinModalVisible(false)}>
+              <Text style={styles.closeButton}>Close</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -340,5 +363,17 @@ const styles = StyleSheet.create({
     left: 0,
     position: 'absolute',
   },
+  blankBox: {
+    width: 200,
+    height: 100,
+    backgroundColor: 'white',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 10,
+    elevation: 5,
+  },
+  closeButton: {
+    marginTop: 10,
+    color: '#007BFF',
+  },
 });
-
