@@ -48,3 +48,11 @@ Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
+#How to run BarBuzz 
+
+1. sign on, and click submit! 
+2. navigate to which bar you want on the map by clicking the pins or on the list in the corner
+3. pick the option that pops up when you click on the pin
+4. navigate to the bar page (center) to see who is also attending! (Not reflective of actual data yet)
+5. click on the stats page to look at personal stats 
