@@ -51,8 +51,10 @@ Join our community of developers creating universal apps.
 
 #How to run BarBuzz 
 
-1. sign on, and click submit! 
-2. navigate to which bar you want on the map by clicking the pins or on the list in the corner
-3. pick the option that pops up when you click on the pin
-4. navigate to the bar page (center) to see who is also attending! (Not reflective of actual data yet)
-5. click on the stats page to look at personal stats 
+1. in your terminal, run npm start in the appropriate folder 
+2. scan the QR code to begin 
+3. sign on, and click submit! 
+4. navigate to which bar you want on the map by clicking the pins or on the list in the corner
+5. pick the option that pops up when you click on the pin
+6. navigate to the bar page (center) to see who is also attending! (Not reflective of actual data yet)
+7. click on the stats page to look at personal stats 
