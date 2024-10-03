@@ -251,7 +251,7 @@ export default function HomeScreen() {
       </Modal>
 
 
- {/* Blank Box Modal when a pin is clicked */}
+      {/* Blank Box Modal when a pin is clicked */}
 <Modal
   animationType="slide"
   transparent={true}
@@ -265,36 +265,41 @@ export default function HomeScreen() {
         <Text style={styles.closeButtonText}>X</Text>
       </TouchableOpacity>
 
-      {/* Question 1 */}
-      <View style={styles.questionContainer}>
-        <Text style={styles.questionText}>Are you currently here?</Text>
-        <TouchableOpacity 
-          style={styles.yesButton} 
-          onPress={() => {
-            setCurrentlyHere(true); // Set state to true for currently here
-            setPinModalVisible(false); // Close the modal
-          }}
-        >
-          <Text style={styles.buttonText}>Yes</Text>
-        </TouchableOpacity>
-      </View>
+      {/* Container for Questions */}
+      <View style={styles.questionsStack}>
+        {/* Question 1 Container */}
+        <View style={styles.questionContainer}>
+          <Text style={styles.questionText}>Are you currently here?</Text>
+          <TouchableOpacity 
+            style={styles.yesButton} 
+            onPress={() => {
+              setCurrentlyHere(true); // Set state to true for currently here
+              setPinModalVisible(false); // Close the modal
+            }}
+          >
+            <Text style={styles.buttonText}>Yes</Text>
+          </TouchableOpacity>
+        </View>
 
-      {/* Question 2 */}
-      <View style={styles.questionContainer}>
-        <Text style={styles.questionText}>Are you planning to attend?</Text>
-        <TouchableOpacity 
-          style={styles.yesButton} 
-          onPress={() => {
-            setPlanningToAttend(true); // Set state to true for planning to attend
-            setPinModalVisible(false); // Close the modal
-          }}
-        >
-          <Text style={styles.buttonText}>Yes</Text>
-        </TouchableOpacity>
+        {/* Separate container for Question 2 */}
+        <View style={styles.questionContainer}>
+          <Text style={styles.questionText}>Are you planning to attend?</Text>
+          <TouchableOpacity 
+            style={styles.yesButton} 
+            onPress={() => {
+              setPlanningToAttend(true); // Set state to true for planning to attend
+              setPinModalVisible(false); // Close the modal
+            }}
+          >
+            <Text style={styles.buttonText}>Yes</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   </View>
 </Modal>
+
+
 
 
     </>
@@ -320,6 +325,12 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 8,
     zIndex: 1,
+  },
+  questionsStack: {
+    flexDirection: 'column', // Stack questions vertically
+    alignItems: 'center', // Center questions horizontally
+    justifyContent: 'center', // Center questions vertically within the stack
+    width: '100%', // Take full width of blank box
   },
   listItem: {
     fontSize: 16,
@@ -397,9 +408,11 @@ const styles = StyleSheet.create({
   },
   questionText: {
     flex: 1, // Allow the text to take up available space
+   // fontSize: 15,
     textAlign: 'left', // Align text to the left
     //marginRight: 5, // Space between text and button
     fontWeight: 'bold',
+    marginRight:10,
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -418,32 +431,36 @@ const styles = StyleSheet.create({
   buttonText: {
     color: 'white',
     fontWeight: 'bold',
-    flex: 1, // Reduced font size for button text
+    //flex: 1, // Reduced font size for button text
     textAlign: 'center', // Ensure text is centered
-    lineHeight: 40,
+    //lineHeight: 40,
   },
   blankBox: {
     width: 300,
-    height: 150,
+    //height: 150,
     padding: 20,
     backgroundColor: 'white',
     borderRadius: 10,
-    justifyContent: 'space-around', 
+    justifyContent: 'center', 
+    alignItems: 'center',
   },
   yesButton: {
-    backgroundColor: '#6FCF97',
-    width: 40, // Set a fixed width
+    backgroundColor: '#1E90FF',
+    width: 75, // Set a fixed width
     height: 40, // Set the same height to make it a square
-    marginBottom: -20,
+    //marginTop: 10,
+    //marginBottom: -20,
     borderRadius: 5,
     alignItems: 'center', // Center the text horizontally
     justifyContent: 'center', // Center the text vertically
   },
   questionContainer: {
+    width: '100%',
     flexDirection: 'row', // Use row layout for questions and buttons
     justifyContent: 'space-between', // Space between question text and button
     alignItems: 'center', // Align items in the center vertically
-    marginBottom: 10, // Space between questions
+    marginBottom: 15, // Space between questions
+    marginTop: 15
   },
   closeButton: {
     position: 'absolute',
