@@ -6,7 +6,7 @@ node_modules/
 *.tmp
 
 # Ignore Firebase service account JSON file
-firebase-service-account.json
+barbuzz-29b1a-firebase-adminsdk-srfma-75e610b615.json
 
 # Ignore environment variable files
 .env
