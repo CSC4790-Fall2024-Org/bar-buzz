@@ -110,6 +110,7 @@ export default function HomeScreen() {
     const [month, day, year] = dob.split('/');
     const formattedDob = `${year}-${month}-${day}`;
 
+
     try {
       console.log("Sending request to Firestore...");
   
