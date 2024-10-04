@@ -4,6 +4,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { StatusBar } from 'expo-status-bar';
 import MapView, { Marker, Region } from 'react-native-maps';
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from '../../firebase.js';  // Import the Firestore database from firebase.js
+
 
 let showLocationsOfInterest = [
   {
@@ -90,6 +93,8 @@ export default function HomeScreen() {
   };
 
   const handleSignUp = async () => {
+    console.log("Button Clicked!");
+
     if (!email.endsWith('@villanova.edu')) {
       Alert.alert('Invalid Email', 'Please use a Villanova email address.');
       return;
@@ -106,12 +111,31 @@ export default function HomeScreen() {
     const formattedDob = `${year}-${month}-${day}`;
 
     try {
+      console.log("Sending request to Firestore...");
+  
+      // Add a new document to Firestore 'users' collection
+      await addDoc(collection(db, 'users'), {
+        name,
+        email,
+        dob: formattedDob,
+        password
+      });
+  
+      Alert.alert('Success', `Welcome to BarBuzz, ${name}!`);
+    } catch (error) {
+      console.error('Error signing up', error);
+      Alert.alert('Error', 'An error occurred while signing up. Please try again later.');
+    }
+
+    /*
+    try {
       const response = await axios.post('http://localhost:8082/signup', {
         name,
         email,
         dob: formattedDob,
         password
       });
+
 
       if (response.status === 201) {
         await AsyncStorage.setItem('isSignedUp', 'true');
@@ -124,7 +148,10 @@ export default function HomeScreen() {
       console.error('Error signing up', error);
       Alert.alert('Error', 'An error occurred while signing up. Please try again later.');
     }
+  */
+  
   };
+  
 
   return (
     <>

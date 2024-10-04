@@ -1,0 +1,16 @@
+# Ignore node_modules folder
+node_modules/
+
+# Ignore any log files or temporary files
+*.log
+*.tmp
+
+# Ignore Firebase service account JSON file
+firebase-service-account.json
+
+# Ignore environment variable files
+.env
+
+# Ignore any system-specific files
+.idea/
+.DS_Store
