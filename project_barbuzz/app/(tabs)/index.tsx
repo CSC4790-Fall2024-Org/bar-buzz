@@ -49,6 +49,9 @@ export default function HomeScreen() {
   const [email, setEmail] = useState('');
   const [dob, setDob] = useState('');
   const [password, setPassword] = useState('');
+  const [pinModalVisible, setPinModalVisible] = useState(false); 
+  const [currentlyHere, setCurrentlyHere] = useState(false); // State for "Are you currently here?"
+  const [planningToAttend, setPlanningToAttend] = useState(false);
   const mapRef = useRef<MapView | null>(null);
 
   const onRegionChange = (region: Region) => {
@@ -64,6 +67,9 @@ export default function HomeScreen() {
         longitudeDelta: 0.01,
       }, 1000);
     }
+  };
+  const handleMarkerPress = () => {
+    setPinModalVisible(true); // Show the blank box modal
   };
 
   useEffect(() => {
@@ -184,6 +190,7 @@ export default function HomeScreen() {
                   ? 'red'    
                   : 'orange' 
               }
+              onPress={handleMarkerPress}
             />
           ))}
         </MapView>
@@ -270,6 +277,59 @@ export default function HomeScreen() {
           </View>
         </View>
       </Modal>
+
+
+      {/* Blank Box Modal when a pin is clicked */}
+<Modal
+  animationType="slide"
+  transparent={true}
+  visible={pinModalVisible}
+  onRequestClose={() => setPinModalVisible(false)}
+>
+  <View style={styles.modalContainer}>
+    <View style={styles.blankBox}>
+      {/* Close Button */}
+      <TouchableOpacity style={styles.closeButton} onPress={() => setPinModalVisible(false)}>
+        <Text style={styles.closeButtonText}>X</Text>
+      </TouchableOpacity>
+
+      {/* Container for Questions */}
+      <View style={styles.questionsStack}>
+        {/* Question 1 Container */}
+        <View style={styles.questionContainer}>
+          <Text style={styles.questionText}>Are you currently here?</Text>
+          <TouchableOpacity 
+            style={styles.yesButton} 
+            onPress={() => {
+              setCurrentlyHere(true); // Set state to true for currently here
+              setPinModalVisible(false); // Close the modal
+            }}
+          >
+            <Text style={styles.buttonText}>Yes</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Separate container for Question 2 */}
+        <View style={styles.questionContainer}>
+          <Text style={styles.questionText}>Are you planning to attend?</Text>
+          <TouchableOpacity 
+            style={styles.yesButton} 
+            onPress={() => {
+              setPlanningToAttend(true); // Set state to true for planning to attend
+              setPinModalVisible(false); // Close the modal
+            }}
+          >
+            <Text style={styles.buttonText}>Yes</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  </View>
+</Modal>
+
+
+
+
     </>
   );
 }
@@ -293,6 +353,12 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 8,
     zIndex: 1,
+  },
+  questionsStack: {
+    flexDirection: 'column', // Stack questions vertically
+    alignItems: 'center', // Center questions horizontally
+    justifyContent: 'center', // Center questions vertically within the stack
+    width: '100%', // Take full width of blank box
   },
   listItem: {
     fontSize: 16,
@@ -368,5 +434,70 @@ const styles = StyleSheet.create({
     left: 0,
     position: 'absolute',
   },
+  questionText: {
+    flex: 1, // Allow the text to take up available space
+   // fontSize: 15,
+    textAlign: 'left', // Align text to the left
+    //marginRight: 5, // Space between text and button
+    fontWeight: 'bold',
+    marginRight:10,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginBottom: 10,
+  },
+  noButton: {
+    backgroundColor: '#FF6B6B',
+    padding: 10,
+    borderRadius: 5,
+    flex: 1,
+    marginLeft: 5,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    //flex: 1, // Reduced font size for button text
+    textAlign: 'center', // Ensure text is centered
+    //lineHeight: 40,
+  },
+  blankBox: {
+    width: 300,
+    //height: 150,
+    padding: 20,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    justifyContent: 'center', 
+    alignItems: 'center',
+  },
+  yesButton: {
+    backgroundColor: '#1E90FF',
+    width: 75, // Set a fixed width
+    height: 40, // Set the same height to make it a square
+    //marginTop: 10,
+    //marginBottom: -20,
+    borderRadius: 5,
+    alignItems: 'center', // Center the text horizontally
+    justifyContent: 'center', // Center the text vertically
+  },
+  questionContainer: {
+    width: '100%',
+    flexDirection: 'row', // Use row layout for questions and buttons
+    justifyContent: 'space-between', // Space between question text and button
+    alignItems: 'center', // Align items in the center vertically
+    marginBottom: 15, // Space between questions
+    marginTop: 15
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    //padding: 5, // Add padding to make it clickable
+  },
+  closeButtonText: {
+    fontSize: 24, // Make the "X" larger
+    color: 'black', // Set the color for the "X"
+  },
 });
-
