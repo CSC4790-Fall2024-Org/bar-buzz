@@ -2,11 +2,10 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
-import { SafeAreaView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { SafeAreaView, View, Image, StyleSheet } from 'react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -14,15 +13,24 @@ export default function RootLayout() {
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
+  const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
     if (loaded) {
-      SplashScreen.hideAsync();
+      // Hide the splash screen after 2 seconds
+      setTimeout(() => {
+        setShowSplash(false);
+        SplashScreen.hideAsync();
+      }, 2000);
     }
   }, [loaded]);
 
-  if (!loaded) {
-    return null;
+  if (!loaded || showSplash) {
+    return (
+      <View style={styles.splashContainer}>
+        <Image source={require('@/assets/images/BBlogo.png')} style={styles.splashImage} />
+      </View>
+    );
   }
 
   return (
@@ -31,7 +39,6 @@ export default function RootLayout() {
         <Stack>
           {/* Hide header for (tabs) */}
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-
           {/* Define other screens with headers */}
           <Stack.Screen name="detail" options={{ title: 'Friends' }} />
           <Stack.Screen name="+not-found" options={{ headerShown: false }} />
@@ -41,6 +48,19 @@ export default function RootLayout() {
   );
 }
 
+const styles = StyleSheet.create({
+  splashContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'white', // Change this color to match your app's theme if needed
+  },
+  splashImage: {
+    width: 150, // Adjust the width based on your logo's size
+    height: 150, // Adjust the height based on your logo's size
+    resizeMode: 'contain', // Ensures the logo maintains its aspect ratio
+  },
+});
 
 
 
