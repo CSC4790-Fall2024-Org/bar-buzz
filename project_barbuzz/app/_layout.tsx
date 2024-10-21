@@ -56,8 +56,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'white', // Change this color to match your app's theme if needed
   },
   splashImage: {
-    width: 150, // Adjust the width based on your logo's size
-    height: 150, // Adjust the height based on your logo's size
+    width: 300, 
+    height: 300, 
     resizeMode: 'contain', // Ensures the logo maintains its aspect ratio
   },
 });
