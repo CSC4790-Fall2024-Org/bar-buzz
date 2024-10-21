@@ -52,6 +52,7 @@ export default function HomeScreen() {
   const [pinModalVisible, setPinModalVisible] = useState(false); 
   const [currentlyHere, setCurrentlyHere] = useState(false); // State for "Are you currently here?"
   const [planningToAttend, setPlanningToAttend] = useState(false);
+  const [showSplash, setShowSplash] = useState(true); // Splash screen state
   const mapRef = useRef<MapView | null>(null);
 
   const onRegionChange = (region: Region) => {
