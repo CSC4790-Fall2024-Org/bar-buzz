@@ -312,9 +312,9 @@ export default function HomeScreen() {
       {/* Question 2: Are you planning to attend? */}
       <View style={styles.questionContainer}>
       <Text style={styles.questionText}>Are you planning to attend?</Text>
-      <TouchableOpacity 
-      style={[styles.radioCircle, planningToAttend && styles.selectedRadioCircle]} 
-      onPress={() => {
+  <TouchableOpacity 
+    style={[styles.radioCircle, planningToAttend && styles.selectedRadioCircle]} 
+    onPress={() => {
       if (planningToAttend) {
         setPlanningToAttend(false);  // Clear if already selected
       } else {
@@ -337,6 +337,12 @@ export default function HomeScreen() {
     </View>
   </View>
 </Modal>
+
+
+
+
+
+
     </>
   );
 }
