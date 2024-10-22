@@ -128,6 +128,12 @@ export default function HomeScreen() {
         dob: formattedDob,
         password
       });
+
+      // Save sign-up status to AsyncStorage
+      await AsyncStorage.setItem('isSignedUp', 'true');
+    
+      // Close the modal after successful sign-up
+      setModalVisible(false);
   
       Alert.alert('Success', `Welcome to BarBuzz, ${name}!`);
     } catch (error) {
