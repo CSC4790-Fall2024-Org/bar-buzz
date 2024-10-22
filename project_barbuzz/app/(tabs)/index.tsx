@@ -73,6 +73,20 @@ export default function HomeScreen() {
     setPinModalVisible(true); // Show the blank box modal
   };
 
+  const handleBuzzedSubmit = () => {
+    if (currentlyHere) {
+      Alert.alert('Buzzed!', 'You are currently here.');
+    } else if (planningToAttend) {
+      Alert.alert('Buzzed!', 'You are planning to attend.');
+    } else {
+      Alert.alert('Error', 'Please select an option.');
+    }
+  
+    // Close modal after submission
+    setPinModalVisible(false);
+  };
+  
+
   useEffect(() => {
     const checkUserSignUpStatus = async () => {
       try {
@@ -140,29 +154,6 @@ export default function HomeScreen() {
       console.error('Error signing up', error);
       Alert.alert('Error', 'An error occurred while signing up. Please try again later.');
     }
-
-    /*
-    try {
-      const response = await axios.post('http://localhost:8082/signup', {
-        name,
-        email,
-        dob: formattedDob,
-        password
-      });
-
-
-      if (response.status === 201) {
-        await AsyncStorage.setItem('isSignedUp', 'true');
-        setModalVisible(false);
-        Alert.alert('Success', `Welcome to BarBuzz, ${name}!`);
-      } else {
-        Alert.alert('Sign-Up Failed', 'Please try again later.');
-      }
-    } catch (error) {
-      console.error('Error signing up', error);
-      Alert.alert('Error', 'An error occurred while signing up. Please try again later.');
-    }
-  */
   
   };
   
@@ -286,7 +277,7 @@ export default function HomeScreen() {
       </Modal>
 
 
-      {/* Blank Box Modal when a pin is clicked */}
+{/* Blank Box Modal when a pin is clicked */}
 <Modal
   animationType="slide"
   transparent={true}
@@ -302,37 +293,44 @@ export default function HomeScreen() {
 
       {/* Container for Questions */}
       <View style={styles.questionsStack}>
-        {/* Question 1 Container */}
+        {/* Question 1: Are you currently here? */}
         <View style={styles.questionContainer}>
           <Text style={styles.questionText}>Are you currently here?</Text>
           <TouchableOpacity 
-            style={styles.yesButton} 
+            style={[styles.radioCircle, currentlyHere && styles.selectedRadioCircle]} 
             onPress={() => {
-              setCurrentlyHere(true); // Set state to true for currently here
-              setPinModalVisible(false); // Close the modal
+              setCurrentlyHere(true);
+              setPlanningToAttend(false); // Ensure only one option is selected
             }}
-          >
-            <Text style={styles.buttonText}>Yes</Text>
-          </TouchableOpacity>
+          />
         </View>
 
-        {/* Separate container for Question 2 */}
+        {/* Question 2: Are you planning to attend? */}
         <View style={styles.questionContainer}>
           <Text style={styles.questionText}>Are you planning to attend?</Text>
           <TouchableOpacity 
-            style={styles.yesButton} 
+            style={[styles.radioCircle, planningToAttend && styles.selectedRadioCircle]} 
             onPress={() => {
-              setPlanningToAttend(true); // Set state to true for planning to attend
-              setPinModalVisible(false); // Close the modal
+              setPlanningToAttend(true);
+              setCurrentlyHere(false); // Ensure only one option is selected
             }}
-          >
-            <Text style={styles.buttonText}>Yes</Text>
-          </TouchableOpacity>
+          />
         </View>
       </View>
+
+      {/* "Buzzed" Button */}
+      <TouchableOpacity 
+        style={styles.buzzedButton} 
+        onPress={handleBuzzedSubmit} // Handler for submission
+        disabled={!currentlyHere && !planningToAttend} // Disable if no option is selected
+      >
+        <Text style={styles.buzzedButtonText}>Buzzed</Text>
+      </TouchableOpacity>
     </View>
   </View>
 </Modal>
+
+
 
 
 
@@ -342,6 +340,41 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  radioCircle: {
+    height: 20,
+    width: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#1E90FF',  // Circle border color
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 10,
+  },
+  selectedRadioCircle: {
+    backgroundColor: '#1E90FF', // Circle fill when selected
+  },
+  questionContainer: {
+    width: '100%',
+    flexDirection: 'row', // Align question text and circle
+    justifyContent: 'space-between', // Space between text and circle
+    alignItems: 'center',
+    marginBottom: 15, 
+    marginTop: 15,
+  },
+  buzzedButton: {
+    backgroundColor: '#6FCF97', // Green color for the button
+    padding: 15,
+    borderRadius: 5,
+    width: '80%', // Width of the button
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+  },
+  buzzedButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
   container: {
     flex: 1, 
     backgroundColor: '#fff',
@@ -488,14 +521,6 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     alignItems: 'center', // Center the text horizontally
     justifyContent: 'center', // Center the text vertically
-  },
-  questionContainer: {
-    width: '100%',
-    flexDirection: 'row', // Use row layout for questions and buttons
-    justifyContent: 'space-between', // Space between question text and button
-    alignItems: 'center', // Align items in the center vertically
-    marginBottom: 15, // Space between questions
-    marginTop: 15
   },
   closeButton: {
     position: 'absolute',
