@@ -297,26 +297,34 @@ export default function HomeScreen() {
         <View style={styles.questionContainer}>
           <Text style={styles.questionText}>Are you currently here?</Text>
           <TouchableOpacity 
-            style={[styles.radioCircle, currentlyHere && styles.selectedRadioCircle]} 
-            onPress={() => {
-              setCurrentlyHere(true);
-              setPlanningToAttend(false); // Ensure only one option is selected
-            }}
-          />
-        </View>
-
-        {/* Question 2: Are you planning to attend? */}
-        <View style={styles.questionContainer}>
-          <Text style={styles.questionText}>Are you planning to attend?</Text>
-          <TouchableOpacity 
-            style={[styles.radioCircle, planningToAttend && styles.selectedRadioCircle]} 
-            onPress={() => {
-              setPlanningToAttend(true);
-              setCurrentlyHere(false); // Ensure only one option is selected
-            }}
-          />
-        </View>
+          style={[styles.radioCircle, currentlyHere && styles.selectedRadioCircle]} 
+          onPress={() => {
+          if (currentlyHere) {
+            setCurrentlyHere(false);  // Clear if already selected
+          } else {
+            setCurrentlyHere(true);
+            setPlanningToAttend(false);  // Ensure only one option is selected
+          }
+        }}
+      />
       </View>
+
+      {/* Question 2: Are you planning to attend? */}
+      <View style={styles.questionContainer}>
+      <Text style={styles.questionText}>Are you planning to attend?</Text>
+      <TouchableOpacity 
+      style={[styles.radioCircle, planningToAttend && styles.selectedRadioCircle]} 
+      onPress={() => {
+      if (planningToAttend) {
+        setPlanningToAttend(false);  // Clear if already selected
+      } else {
+        setPlanningToAttend(true);
+        setCurrentlyHere(false);  // Ensure only one option is selected
+      }
+    }}
+  />
+</View>
+</View>
 
       {/* "Buzzed" Button */}
       <TouchableOpacity 
@@ -329,12 +337,6 @@ export default function HomeScreen() {
     </View>
   </View>
 </Modal>
-
-
-
-
-
-
     </>
   );
 }
