@@ -114,10 +114,3 @@ const styles = StyleSheet.create({
 export default TabTwoScreen;
 
 
-
-
-
-
-
-
-
