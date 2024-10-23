@@ -91,15 +91,20 @@ export default function HomeScreen() {
 
   useEffect(() => {
     const checkUserSignUpStatus = async () => {
-      try {
+      const checkUserSignUpStatus = async () => {
+        setModalVisible(true);  // Always show the sign-up modal
+      };
+      checkUserSignUpStatus();
+
+      /*try {
         const isSignedUp = await AsyncStorage.getItem('isSignedUp');
         if (!isSignedUp) {
           setModalVisible(true);
         }
       } catch (error) {
         console.error('Error checking sign-up status', error);
-      }
-    };
+      } */
+    }; 
     checkUserSignUpStatus();
   }, []);
 
