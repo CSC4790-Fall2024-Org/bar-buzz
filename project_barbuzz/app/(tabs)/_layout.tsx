@@ -1,4 +1,3 @@
-// TabLayout.tsx
 import React, { useState } from 'react';
 import { Tabs } from 'expo-router';
 import { View, TouchableOpacity } from 'react-native';
