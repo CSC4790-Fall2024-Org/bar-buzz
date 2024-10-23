@@ -6,6 +6,7 @@ import { StatusBar } from 'expo-status-bar';
 import MapView, { Marker, Region } from 'react-native-maps';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../../firebase.js';  // Import the Firestore database from firebase.js
+import { ScrollView } from 'react-native';
 
 
 let showLocationsOfInterest = [
@@ -217,71 +218,73 @@ export default function HomeScreen() {
 
       {/* Sign-up modal */}
       <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalView}>
-            <Text style={styles.welcomeText}>Welcome to BarBuzz</Text>
+  animationType="slide"
+  transparent={true}
+  visible={modalVisible}
+  onRequestClose={() => setModalVisible(false)}
+>
+  <View style={styles.modalContainer}>
+    <View style={styles.modalView}>
+      <ScrollView contentContainerStyle={styles.scrollViewContent}>
+        <Text style={styles.welcomeText}>Welcome to BarBuzz</Text>
 
-            {/* Name Input */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Enter your name*</Text>
-              <TextInput
-                value={name}
-                onChangeText={setName}
-                style={styles.input}
-                placeholder="Your name"
-              />
-            </View>
-
-            {/* Email Input */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Enter your Villanova E-mail*</Text>
-              <TextInput
-                value={email}
-                onChangeText={setEmail}
-                style={styles.input}
-                keyboardType="email-address"
-                placeholder="Your Villanova Email"
-              />
-            </View>
-
-            {/* Date of Birth Input with Auto-Formatting */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Enter your Date of Birth*</Text>
-              <TextInput
-                value={dob}
-                onChangeText={handleDobChange}
-                style={styles.input}
-                placeholder="MM/DD/YYYY"
-                maxLength={10}
-                keyboardType="number-pad"
-              />
-              <Text style={styles.ageRestrictionText}>You must be 21+ to sign up</Text>
-            </View>
-
-            {/* Password Input */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Enter your Password*</Text>
-              <TextInput
-                value={password}
-                onChangeText={setPassword}
-                style={styles.input}
-                secureTextEntry
-                placeholder="Your password"
-              />
-            </View>
-
-            {/* Submit Button */}
-            <TouchableOpacity style={styles.submitButton} onPress={handleSignUp}>
-              <Text style={styles.submitButtonText}>Let’s Go!</Text>
-            </TouchableOpacity>
-          </View>
+        {/* Name Input */}
+        <View style={styles.inputContainer}>
+          <Text style={styles.inputLabel}>Enter your name*</Text>
+          <TextInput
+            value={name}
+            onChangeText={setName}
+            style={styles.input}
+            placeholder="Your name"
+          />
         </View>
-      </Modal>
+
+        {/* Email Input */}
+        <View style={styles.inputContainer}>
+          <Text style={styles.inputLabel}>Enter your Villanova E-mail*</Text>
+          <TextInput
+            value={email}
+            onChangeText={setEmail}
+            style={styles.input}
+            keyboardType="email-address"
+            placeholder="Your Villanova Email"
+          />
+        </View>
+
+        {/* Date of Birth Input */}
+        <View style={styles.inputContainer}>
+          <Text style={styles.inputLabel}>Enter your Date of Birth*</Text>
+          <TextInput
+            value={dob}
+            onChangeText={handleDobChange}
+            style={styles.input}
+            placeholder="MM/DD/YYYY"
+            maxLength={10}
+            keyboardType="number-pad"
+          />
+          <Text style={styles.ageRestrictionText}>You must be 21+ to sign up</Text>
+        </View>
+
+        {/* Password Input */}
+        <View style={styles.inputContainer}>
+          <Text style={styles.inputLabel}>Enter your Password*</Text>
+          <TextInput
+            value={password}
+            onChangeText={setPassword}
+            style={styles.input}
+            secureTextEntry
+            placeholder="Your password"
+          />
+        </View>
+
+        {/* Submit Button */}
+        <TouchableOpacity style={styles.submitButton} onPress={handleSignUp}>
+          <Text style={styles.submitButtonText}>Let’s Go!</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </View>
+  </View>
+</Modal>
 
 
 {/* Blank Box Modal when a pin is clicked */}
@@ -549,4 +552,8 @@ const styles = StyleSheet.create({
     fontSize: 24, // Make the "X" larger
     color: 'black', // Set the color for the "X"
   },
+   scrollViewContent: {
+        padding: 10, // Example styles
+        backgroundColor: 'white', // Example styles
+    },
 });
