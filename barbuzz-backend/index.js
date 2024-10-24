@@ -4,6 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const admin = require('firebase-admin');  // Add Firebase Admin SDK
+const { sendOtp, verifyOtp } = require('./otp'); // Import the OTP functions from otp.js
 
 const app = express();
 const PORT = 8082;
@@ -19,6 +20,29 @@ admin.initializeApp({
 });
 
 const db = admin.firestore();  // Firestore reference
+
+app.post('/send-otp', async (req, res) => {
+  const { email } = req.body;
+  
+  try {
+    const result = await sendOtp(email); // Call the function from otp.js
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Route to handle verifying OTP
+app.post('/verify-otp', (req, res) => {
+  const { email, otp } = req.body;
+  
+  try {
+    const result = verifyOtp(email, otp); // Call the function from otp.js
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
 
 // Sign up API with Firebase Firestore
 app.post('/signup', async (req, res) => {

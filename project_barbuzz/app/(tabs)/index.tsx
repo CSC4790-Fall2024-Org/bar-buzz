@@ -46,6 +46,8 @@ let showLocationsOfInterest = [
 
 export default function HomeScreen() {
   const [modalVisible, setModalVisible] = useState(false);
+  const [otpModalVisible, setOtpModalVisible] = useState(false); // For OTP modal
+  const [otp, setOtp] = useState(''); // Store OTP
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [dob, setDob] = useState('');
@@ -54,6 +56,7 @@ export default function HomeScreen() {
   const [currentlyHere, setCurrentlyHere] = useState(false); // State for "Are you currently here?"
   const [planningToAttend, setPlanningToAttend] = useState(false);
   const [showSplash, setShowSplash] = useState(true); // Splash screen state
+  const [isOtpSent, setIsOtpSent] = useState(false); // Track if OTP has been sent
   const mapRef = useRef<MapView | null>(null);
 
   const onRegionChange = (region: Region) => {
@@ -119,6 +122,41 @@ export default function HomeScreen() {
       formatted = `${cleaned.slice(0, 2)}/${cleaned.slice(2, 4)}/${cleaned.slice(4)}`;
     }
     setDob(formatted);
+  };
+
+  // Step 1: Send OTP
+  const handleSendOtp = async () => {
+    if (!email.endsWith('@villanova.edu')) {
+      Alert.alert('Invalid Email', 'Please use a Villanova email address.');
+      return;
+    }
+
+    try {
+      const response = await axios.post('http://localhost:8082/send-otp', { email });
+      if (response.status === 200) {
+        setIsOtpSent(true);
+        setOtpModalVisible(true); // Show OTP input modal
+        Alert.alert('OTP Sent', `An OTP has been sent to ${email}. Please check your inbox.`);
+      }
+    } catch (error) {
+      console.error('Error sending OTP:', error);
+      Alert.alert('Error', 'An error occurred while sending the OTP. Please try again.');
+    }
+  };
+
+  // Step 2: Verify OTP
+  const handleVerifyOtp = async () => {
+    try {
+      const response = await axios.post('http://localhost:8082/verify-otp', { email, otp });
+      if (response.status === 200) {
+        Alert.alert('OTP Verified', 'OTP successfully verified. You may now proceed.');
+        setOtpModalVisible(false); // Close OTP modal after verification
+        handleSignUp(); // Proceed to sign-up after OTP verification
+      }
+    } catch (error) {
+      console.error('Error verifying OTP:', error);
+      Alert.alert('Error', 'Invalid OTP. Please try again.');
+    }
   };
 
   const handleSignUp = async () => {
@@ -349,12 +387,6 @@ export default function HomeScreen() {
     </View>
   </View>
 </Modal>
-
-
-
-
-
-
     </>
   );
 }
