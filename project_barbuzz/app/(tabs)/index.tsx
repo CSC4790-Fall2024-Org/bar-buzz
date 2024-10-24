@@ -58,6 +58,7 @@ export default function HomeScreen() {
   const [showSplash, setShowSplash] = useState(true); // Splash screen state
   const [isOtpSent, setIsOtpSent] = useState(false); // Track if OTP has been sent
   const mapRef = useRef<MapView | null>(null);
+  const [isSignUp, setIsSignUp] = useState(true);
 
   const onRegionChange = (region: Region) => {
     console.log(region);
@@ -95,20 +96,8 @@ export default function HomeScreen() {
 
   useEffect(() => {
     const checkUserSignUpStatus = async () => {
-      const checkUserSignUpStatus = async () => {
-        setModalVisible(true);  // Always show the sign-up modal
-      };
-      checkUserSignUpStatus();
-
-      /*try {
-        const isSignedUp = await AsyncStorage.getItem('isSignedUp');
-        if (!isSignedUp) {
-          setModalVisible(true);
-        }
-      } catch (error) {
-        console.error('Error checking sign-up status', error);
-      } */
-    }; 
+      setModalVisible(true);  // Always show the sign-up modal
+    };
     checkUserSignUpStatus();
   }, []);
 
@@ -159,6 +148,20 @@ export default function HomeScreen() {
     }
   };
 
+  const handleSignIn = async () => {
+    try {
+      // Add your sign-in logic here, such as sending email and password to your server for authentication.
+      const response = await axios.post('http://localhost:8082/sign-in', { email, password });
+      if (response.status === 200) {
+        Alert.alert('Success', 'Welcome back to BarBuzz!');
+        setModalVisible(false);  // Close modal on successful sign-in
+      }
+    } catch (error) {
+      console.error('Error signing in', error);
+      Alert.alert('Error', 'Invalid credentials. Please try again.');
+    }
+  };
+
   const handleSignUp = async () => {
     console.log("Button Clicked!");
 
@@ -176,6 +179,7 @@ export default function HomeScreen() {
 
     const [month, day, year] = dob.split('/');
     const formattedDob = `${year}-${month}-${day}`;
+
 
 
     try {
@@ -254,8 +258,8 @@ export default function HomeScreen() {
         <StatusBar style="auto" />
       </View>
 
-      {/* Sign-up modal */}
-      <Modal
+      {/* Sign-up or Sign-in modal */}
+<Modal
   animationType="slide"
   transparent={true}
   visible={modalVisible}
@@ -264,43 +268,18 @@ export default function HomeScreen() {
   <View style={styles.modalContainer}>
     <View style={styles.modalView}>
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
-        <Text style={styles.welcomeText}>Welcome to BarBuzz</Text>
-
-        {/* Name Input */}
-        <View style={styles.inputContainer}>
-          <Text style={styles.inputLabel}>Enter your name*</Text>
-          <TextInput
-            value={name}
-            onChangeText={setName}
-            style={styles.input}
-            placeholder="Your name"
-          />
-        </View>
+        <Text style={styles.welcomeText}>{isSignUp ? 'Sign Up for BarBuzz' : 'Sign In to BarBuzz'}</Text>
 
         {/* Email Input */}
         <View style={styles.inputContainer}>
-          <Text style={styles.inputLabel}>Enter your Villanova E-mail*</Text>
+          <Text style={styles.inputLabel}>Enter your Email*</Text>
           <TextInput
             value={email}
             onChangeText={setEmail}
             style={styles.input}
             keyboardType="email-address"
-            placeholder="Your Villanova Email"
+            placeholder="Your Email"
           />
-        </View>
-
-        {/* Date of Birth Input */}
-        <View style={styles.inputContainer}>
-          <Text style={styles.inputLabel}>Enter your Date of Birth*</Text>
-          <TextInput
-            value={dob}
-            onChangeText={handleDobChange}
-            style={styles.input}
-            placeholder="MM/DD/YYYY"
-            maxLength={10}
-            keyboardType="number-pad"
-          />
-          <Text style={styles.ageRestrictionText}>You must be 21+ to sign up</Text>
         </View>
 
         {/* Password Input */}
@@ -311,18 +290,56 @@ export default function HomeScreen() {
             onChangeText={setPassword}
             style={styles.input}
             secureTextEntry
-            placeholder="Your password"
+            placeholder="Your Password"
           />
         </View>
 
+        {/* Additional fields for Sign Up only */}
+        {isSignUp && (
+          <>
+            {/* Name Input */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Enter your name*</Text>
+              <TextInput
+                value={name}
+                onChangeText={setName}
+                style={styles.input}
+                placeholder="Your name"
+              />
+            </View>
+
+            {/* Date of Birth Input */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Enter your Date of Birth*</Text>
+              <TextInput
+                value={dob}
+                onChangeText={handleDobChange}
+                style={styles.input}
+                placeholder="MM/DD/YYYY"
+                maxLength={10}
+                keyboardType="number-pad"
+              />
+              <Text style={styles.ageRestrictionText}>You must be 21+ to sign up</Text>
+            </View>
+          </>
+        )}
+
         {/* Submit Button */}
-        <TouchableOpacity style={styles.submitButton} onPress={handleSignUp}>
-          <Text style={styles.submitButtonText}>Let’s Go!</Text>
+        <TouchableOpacity style={styles.submitButton} onPress={isSignUp ? handleSignUp : handleSignIn}>
+          <Text style={styles.submitButtonText}>{isSignUp ? "Let’s Go!" : "Sign In"}</Text>
+        </TouchableOpacity>
+
+        {/* Toggle between Sign Up and Sign In */}
+        <TouchableOpacity onPress={() => setIsSignUp(!isSignUp)}>
+          <Text style={{ color: '#1E90FF', marginTop: 10 }}>
+            {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
+          </Text>
         </TouchableOpacity>
       </ScrollView>
     </View>
   </View>
 </Modal>
+
 
 
 {/* Blank Box Modal when a pin is clicked */}
