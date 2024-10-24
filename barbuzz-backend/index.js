@@ -9,6 +9,11 @@ const { sendOtp, verifyOtp } = require('./otp'); // Import the OTP functions fro
 const app = express();
 const PORT = 8082;
 
+const mapButtons = require('./mapButtons');
+
+// Use the mapButtons routes
+app.use('/api/map', mapButtons);
+
 app.use(cors());
 app.use(bodyParser.json());
 
