@@ -55,7 +55,7 @@ const TabTwoScreen: React.FC = () => {
         ListHeaderComponent={
           <ThemedView style={styles.headerContainer}>
             <Image
-              source={require('@/assets/images/BBlogo.png')}
+              source={require('@/assets/images/BarBuzz2.png')}
               style={styles.BBlogo}
             />
             <ThemedText style={styles.title}>Villanova University</ThemedText>
@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
   },
   itemContent: {
     flexDirection: 'row',
-    justifyContent: 'space-between', // Aligns text and number on opposite sides
+    justifyContent: 'space-between',
     alignItems: 'center',
   },
   item: {
@@ -95,21 +95,29 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     alignItems: 'center',
+    backgroundColor: 'white', // Ensures white background
+    paddingVertical: 20, // Adds vertical spacing
+    paddingHorizontal: 10, // Adds horizontal padding for content
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     color: 'black',
+    marginTop: 10, // Adds space between the logo and the title
   },
   subtitle: {
     fontSize: 21,
     color: 'gray',
+    marginTop: 5, // Adds space between the title and subtitle
   },
   BBlogo: {
-    height: 250,
-    width: '104%',
+    height: 200, // Adjust height to fit the screen better
+    width: 200, // Keeps the logo square and centered
+    resizeMode: 'contain', // Ensures the logo scales properly without distortion
+    marginBottom: 20, // Adds space between the logo and the title
   },
 });
+
 
 export default TabTwoScreen;
 

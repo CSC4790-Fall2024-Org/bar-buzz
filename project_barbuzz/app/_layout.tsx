@@ -28,7 +28,7 @@ export default function RootLayout() {
   if (!loaded || showSplash) {
     return (
       <View style={styles.splashContainer}>
-        <Image source={require('@/assets/images/BBlogo.png')} style={styles.splashImage} />
+        <Image source={require('@/assets/images/BarBuzz2.png')} style={styles.splashImage} />
       </View>
     );
   }
@@ -56,8 +56,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'white', // Change this color to match your app's theme if needed
   },
   splashImage: {
-    width: 300, 
-    height: 300, 
+    width: 350, 
+    height: 350, 
     resizeMode: 'contain', // Ensures the logo maintains its aspect ratio
   },
 });
