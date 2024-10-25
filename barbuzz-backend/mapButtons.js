@@ -1,4 +1,4 @@
-const express = require('express');
+/*const express = require('express');
 const admin = require('firebase-admin');
 
 const router = express.Router();
@@ -32,3 +32,4 @@ router.post('/attendance', async (req, res) => {
 });
 
 module.exports = router;
+*/

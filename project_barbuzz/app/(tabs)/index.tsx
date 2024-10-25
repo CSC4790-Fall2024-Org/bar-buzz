@@ -113,40 +113,45 @@ export default function HomeScreen() {
     setDob(formatted);
   };
 
-  // Step 1: Send OTP
-  const handleSendOtp = async () => {
-    if (!email.endsWith('@villanova.edu')) {
-      Alert.alert('Invalid Email', 'Please use a Villanova email address.');
-      return;
-    }
+ // Step 1: Request OTP from backend
+const requestOtp = async () => {
+  if (!email.endsWith('@villanova.edu')) {
+    Alert.alert('Invalid Email', 'Please use a Villanova email address.');
+    return;
+  }
 
-    try {
-      const response = await axios.post('http://localhost:8082/send-otp', { email });
-      if (response.status === 200) {
-        setIsOtpSent(true);
-        setOtpModalVisible(true); // Show OTP input modal
-        Alert.alert('OTP Sent', `An OTP has been sent to ${email}. Please check your inbox.`);
-      }
-    } catch (error) {
-      console.error('Error sending OTP:', error);
-      Alert.alert('Error', 'An error occurred while sending the OTP. Please try again.');
+  try {
+    const response = await axios.post('http://localhost:8082/send-otp', {
+      email: email
+    });
+    if (response.status === 200) {
+      Alert.alert('Success', 'OTP sent to your email.');
+      setOtpModalVisible(true); // Show OTP input
+    } else {
+      Alert.alert('Error', 'Failed to send OTP.');
     }
-  };
+  } catch (error) {
+    console.error('Error sending OTP:', error);
+    Alert.alert('Network Error', 'Please check your network connection.');
+  }
+};
 
-  // Step 2: Verify OTP
-  const handleVerifyOtp = async () => {
-    try {
-      const response = await axios.post('http://localhost:8082/verify-otp', { email, otp });
-      if (response.status === 200) {
-        Alert.alert('OTP Verified', 'OTP successfully verified. You may now proceed.');
-        setOtpModalVisible(false); // Close OTP modal after verification
-        handleSignUp(); // Proceed to sign-up after OTP verification
-      }
-    } catch (error) {
-      console.error('Error verifying OTP:', error);
+// Step 2: Verify OTP
+const handleVerifyOtp = async () => {
+  try {
+    const response = await axios.post('http://localhost:8082/verify-otp', { email, otp });
+    if (response.status === 200) {
+      Alert.alert('OTP Verified', 'OTP successfully verified. You may now proceed.');
+      setOtpModalVisible(false); // Close OTP modal after verification
+      handleSignUp(); // Proceed to sign-up after OTP verification
+    } else {
       Alert.alert('Error', 'Invalid OTP. Please try again.');
     }
-  };
+  } catch (error) {
+    console.error('Error verifying OTP:', error);
+    Alert.alert('Error', 'Invalid OTP. Please try again.');
+  }
+};
 
   const handleSignIn = async () => {
     try {
@@ -204,12 +209,16 @@ export default function HomeScreen() {
       console.error('Error signing up', error);
       Alert.alert('Error', 'An error occurred while signing up. Please try again later.');
     }
+
+    requestOtp();
   
   };
   
 
   return (
     <>
+
+
       {/* Map with markers */}
       <View style={styles.container}>
         <MapView 
@@ -257,6 +266,25 @@ export default function HomeScreen() {
         </View>
         <StatusBar style="auto" />
       </View>
+
+      {/* OTP Modal */}
+      <Modal animationType="slide" transparent={true} visible={otpModalVisible} onRequestClose={() => setOtpModalVisible(false)}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalView}>
+            <Text style={styles.welcomeText}>Enter OTP</Text>
+            <TextInput
+              value={otp}
+              onChangeText={setOtp}
+              style={styles.input}
+              keyboardType="number-pad"
+              placeholder="Enter OTP"
+            />
+            <TouchableOpacity style={styles.submitButton} onPress={handleVerifyOtp}>
+              <Text style={styles.submitButtonText}>Verify OTP</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {/* Sign-up or Sign-in modal */}
 <Modal

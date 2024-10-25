@@ -25,13 +25,13 @@ async function sendOtp(email) {
   let transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: 'your-email@gmail.com', // Replace with your email
-      pass: 'your-email-password', // Replace with your email password
+      user: 'barbuzzteam@gmail.com', // Replace with your email
+      pass: 'barbuzz123', // Replace with your email password
     },
   });
 
   let mailOptions = {
-    from: 'your-email@gmail.com',
+    from: 'barbuzzteam@gmail.com',
     to: email,
     subject: 'Your OTP for BarBuzz Signup',
     text: `Your OTP is ${otp}. It will expire in 5 minutes.`,

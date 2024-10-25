@@ -9,12 +9,19 @@ const { sendOtp, verifyOtp } = require('./otp'); // Import the OTP functions fro
 const app = express();
 const PORT = 8082;
 
+/*
 const mapButtons = require('./mapButtons');
 
 // Use the mapButtons routes
 app.use('/api/map', mapButtons);
+*/
 
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(bodyParser.json());
 
 // Initialize Firebase Admin SDK
@@ -26,25 +33,28 @@ admin.initializeApp({
 
 const db = admin.firestore();  // Firestore reference
 
+// Route to send OTP
 app.post('/send-otp', async (req, res) => {
   const { email } = req.body;
   
   try {
-    const result = await sendOtp(email); // Call the function from otp.js
+    const result = await sendOtp(email); // Call the async function from otp.js
     res.status(200).json(result);
   } catch (error) {
+    console.error('Error sending OTP:', error.message);
     res.status(400).json({ error: error.message });
   }
 });
 
 // Route to handle verifying OTP
-app.post('/verify-otp', (req, res) => {
+app.post('/verify-otp', async (req, res) => {
   const { email, otp } = req.body;
   
   try {
-    const result = verifyOtp(email, otp); // Call the function from otp.js
+    const result = await verifyOtp(email, otp); // Call the async function from otp.js
     res.status(200).json(result);
   } catch (error) {
+    console.error('Error verifying OTP:', error.message);
     res.status(400).json({ error: error.message });
   }
 });
