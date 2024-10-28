@@ -92,14 +92,14 @@ export default function HomeScreen() {
   };
 
  
-  
+//FOR REQUIRING THE SIGN ON EVERY TIME   
 
-  useEffect(() => {
-    const checkUserSignUpStatus = async () => {
-      setModalVisible(true);  // Always show the sign-up modal
-    };
-    checkUserSignUpStatus();
-  }, []);
+  // useEffect(() => {
+  //   const checkUserSignUpStatus = async () => {
+  //     setModalVisible(true);  // Always show the sign-up modal
+  //   };
+  //   checkUserSignUpStatus();
+  // }, []);
 
   const handleDobChange = (input: string) => {
     const cleaned = input.replace(/[^\d]/g, '');
