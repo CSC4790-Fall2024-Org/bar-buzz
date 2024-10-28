@@ -1,3 +1,4 @@
+//original details page
 import React, { useLayoutEffect } from 'react';
 import { StyleSheet, View, ScrollView } from 'react-native'; // Import ScrollView
 import { ThemedText } from '@/components/ThemedText';
