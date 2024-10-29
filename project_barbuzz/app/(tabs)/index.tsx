@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { StatusBar } from 'expo-status-bar';
 import MapView, { Marker, Region } from 'react-native-maps';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, getDocs, query, where, addDoc } from 'firebase/firestore';
 import { db } from '../../firebase.js';  // Import the Firestore database from firebase.js
 import { ScrollView } from 'react-native';
 
@@ -78,21 +78,35 @@ export default function HomeScreen() {
     setPinModalVisible(true); // Show the blank box modal
   };
 
-  const handleBuzzedSubmit = () => {
-    if (currentlyHere) {
-      Alert.alert('Buzzed!', 'You are currently here.');
-    } else if (planningToAttend) {
-      Alert.alert('Buzzed!', 'You are planning to attend.');
+  const handleBuzzedSubmit = async () => {
+  
+    try {
+      const userId = await AsyncStorage.getItem('userId');  // Retrieve user ID from AsyncStorage
+      console.log("User ID:", userId);
+      console.log("Currently Here:", currentlyHere, "Planning to Attend:", planningToAttend);
+      if (!userId) {
+        Alert.alert('Error', 'User ID not found. Please log in again.');
+        return;
+    }
+    if (currentlyHere || planningToAttend) {
+      await addDoc(collection(db, 'tracking'), {
+        userId: userId || 'anonymous',  // Use 'anonymous' if no userId is found
+        currentlyHere,
+        planningToAttend,
+        timestamp: new Date().toISOString()
+      });
+
+      Alert.alert('Success', 'Your attendance has been recorded in Firestore!');
     } else {
       Alert.alert('Error', 'Please select an option.');
     }
-  
-    // Close modal after submission
+  } catch (error) {
+    console.error('Error adding document to Firestore:', error);
+    Alert.alert('Error', 'Failed to record attendance. Please try again.');
+  } finally {
     setPinModalVisible(false);
-  };
-
- 
-  
+  }
+};
 
   useEffect(() => {
     const checkUserSignUpStatus = async () => {
@@ -113,6 +127,7 @@ export default function HomeScreen() {
     setDob(formatted);
   };
 
+/*
  // Step 1: Request OTP from backend
 const requestOtp = async () => {
   if (!email.endsWith('@villanova.edu')) {
@@ -152,67 +167,88 @@ const handleVerifyOtp = async () => {
     Alert.alert('Error', 'Invalid OTP. Please try again.');
   }
 };
+*/
 
-  const handleSignIn = async () => {
-    try {
-      // Add your sign-in logic here, such as sending email and password to your server for authentication.
-      const response = await axios.post('http://localhost:8082/sign-in', { email, password });
-      if (response.status === 200) {
-        Alert.alert('Success', 'Welcome back to BarBuzz!');
+const handleSignIn = async () => {
+  try {
+    // Step 1: Authenticate with your server
+    const response = await axios.post('http://localhost:8082/sign-in', { email, password });
+    if (response.status === 200) {
+      Alert.alert('Success', 'Welcome back to BarBuzz!');
+
+      // Step 2: Retrieve the Firestore document ID (userId) for the authenticated user
+      const userRef = collection(db, 'users');  // Access 'users' collection
+      const q = query(userRef, where('email', '==', email));  // Create query to find user by email
+      const snapshot = await getDocs(q);  // Execute the query
+
+
+      if (!snapshot.empty) {
+        const userDoc = snapshot.docs[0];  // Get the first matching document
+        const userId = userDoc.id;  // Firestore's unique document ID for the user
+
+        // Step 3: Store the userId in AsyncStorage for later use
+        await AsyncStorage.setItem('userId', userId);
+
         setModalVisible(false);  // Close modal on successful sign-in
+      } else {
+        console.error('No matching user found in Firestore');
+        Alert.alert('Error', 'User not found in database.');
       }
-    } catch (error) {
-      console.error('Error signing in', error);
-      Alert.alert('Error', 'Invalid credentials. Please try again.');
     }
-  };
+  } catch (error) {
+    console.error('Error signing in:', error);
+    Alert.alert('Error', 'Invalid credentials. Please try again.');
+  }
+};
 
-  const handleSignUp = async () => {
-    console.log("Button Clicked!");
+const handleSignUp = async () => {
+  console.log("Button Clicked!");
 
-    if (!email.endsWith('@villanova.edu')) {
-      Alert.alert('Invalid Email', 'Please use a Villanova email address.');
-      return;
-    }
+  if (!email.endsWith('@villanova.edu')) {
+    Alert.alert('Invalid Email', 'Please use a Villanova email address.');
+    return;
+  }
 
-    const birthYear = new Date(dob).getFullYear();
-    const currentYear = new Date().getFullYear();
-    if (currentYear - birthYear < 21) {
-      Alert.alert('Age Restriction', 'You must be 21+ to sign up.');
-      return;
-    }
+  const birthYear = new Date(dob).getFullYear();
+  const currentYear = new Date().getFullYear();
+  if (currentYear - birthYear < 21) {
+    Alert.alert('Age Restriction', 'You must be 21+ to sign up.');
+    return;
+  }
 
-    const [month, day, year] = dob.split('/');
-    const formattedDob = `${year}-${month}-${day}`;
+  const [month, day, year] = dob.split('/');
+  const formattedDob = `${year}-${month}-${day}`;
 
+  try {
+    console.log("Sending request to Firestore...");
 
+    // Step 1: Add a new document to Firestore 'users' collection
+    const userRef = await addDoc(collection(db, 'users'), {
+      name,
+      email,
+      dob: formattedDob,
+      password
+    });
 
-    try {
-      console.log("Sending request to Firestore...");
-  
-      // Add a new document to Firestore 'users' collection
-      await addDoc(collection(db, 'users'), {
-        name,
-        email,
-        dob: formattedDob,
-        password
-      });
+    // Step 2: Retrieve and store the Firestore document ID (userId) for the newly registered user
+    const userId = userRef.id;  // Firestore's unique document ID
+    await AsyncStorage.setItem('userId', userId);  // Store userId in AsyncStorage
 
-      // Save sign-up status to AsyncStorage
-      await AsyncStorage.setItem('isSignedUp', 'true');
-    
-      // Close the modal after successful sign-up
-      setModalVisible(false);
-  
-      Alert.alert('Success', `Welcome to BarBuzz, ${name}!`);
-    } catch (error) {
-      console.error('Error signing up', error);
-      Alert.alert('Error', 'An error occurred while signing up. Please try again later.');
-    }
+    // Step 3: Save sign-up status to AsyncStorage
+    await AsyncStorage.setItem('isSignedUp', 'true');
 
-    requestOtp();
-  
-  };
+    // Close the modal after successful sign-up
+    setModalVisible(false);
+
+    Alert.alert('Success', `Welcome to BarBuzz, ${name}!`);
+  } catch (error) {
+    console.error('Error signing up:', error);
+    Alert.alert('Error', 'An error occurred while signing up. Please try again later.');
+  }
+
+  // requestOtp();  // Uncomment if OTP functionality is needed
+};
+
   
 
   return (
@@ -267,7 +303,7 @@ const handleVerifyOtp = async () => {
         <StatusBar style="auto" />
       </View>
 
-      {/* OTP Modal */}
+      {/* OTP Modal 
       <Modal animationType="slide" transparent={true} visible={otpModalVisible} onRequestClose={() => setOtpModalVisible(false)}>
         <View style={styles.modalContainer}>
           <View style={styles.modalView}>
@@ -285,6 +321,7 @@ const handleVerifyOtp = async () => {
           </View>
         </View>
       </Modal>
+*/}
 
       {/* Sign-up or Sign-in modal */}
 <Modal

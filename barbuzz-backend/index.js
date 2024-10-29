@@ -33,6 +33,7 @@ admin.initializeApp({
 
 const db = admin.firestore();  // Firestore reference
 
+/*
 // Route to send OTP
 app.post('/send-otp', async (req, res) => {
   const { email } = req.body;
@@ -58,6 +59,7 @@ app.post('/verify-otp', async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 });
+*/
 
 // Sign up API with Firebase Firestore
 app.post('/signup', async (req, res) => {
@@ -82,6 +84,35 @@ app.post('/signup', async (req, res) => {
   }
 });
 
+// Route to handle "Buzzed" submission with user UID
+app.post('/buzzed', async (req, res) => {
+  const { currentlyHere, planningToAttend, timestamp, userId } = req.body;
+  console.log("Received /buzzed request:", req.body);  // Log the request data
+
+  if (!userId) {
+    console.error("User ID is missing.");
+    return res.status(400).json({ error: 'User ID is required.' });
+  }
+
+  try {
+    // Reference the 'attendance' collection and create a new document for each submission
+    const attendanceRef = db.collection('tracking').doc();  // Create a new document in 'attendance' collection
+    await attendanceRef.set({
+      userId,  // Associate submission with the user's Firestore UID
+      currentlyHere,
+      planningToAttend,
+      timestamp
+    });
+
+    console.log("Attendance recorded successfully!");  // Log success
+    return res.status(200).json({ message: 'Attendance recorded successfully!' });
+  } catch (error) {
+    console.error('Error recording attendance:', error);
+    return res.status(500).json({ error: 'An error occurred while recording attendance.' });
+  }
+});
+
+
 // Login API with Firebase Firestore
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
@@ -103,5 +134,5 @@ app.post('/login', async (req, res) => {
 
 // Start the server
 app.listen(PORT, () => {
-  console.log('Server running on http://localhost:${8002}/');
+  console.log('Server running on http://localhost:${8082}/');
 });
