@@ -106,6 +106,7 @@ export default function HomeScreen() {
   } finally {
     setPinModalVisible(false);
   };
+  }
 
  
 //FOR REQUIRING THE SIGN ON EVERY TIME   
@@ -474,6 +475,7 @@ const handleSignUp = async () => {
     </>
   );
 }
+
 
 const styles = StyleSheet.create({
   radioCircle: {
