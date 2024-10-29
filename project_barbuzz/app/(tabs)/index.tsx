@@ -105,15 +105,17 @@ export default function HomeScreen() {
     Alert.alert('Error', 'Failed to record attendance. Please try again.');
   } finally {
     setPinModalVisible(false);
-  }
-};
+  };
 
-  useEffect(() => {
-    const checkUserSignUpStatus = async () => {
-      setModalVisible(true);  // Always show the sign-up modal
-    };
-    checkUserSignUpStatus();
-  }, []);
+ 
+//FOR REQUIRING THE SIGN ON EVERY TIME   
+
+  // useEffect(() => {
+  //   const checkUserSignUpStatus = async () => {
+  //     setModalVisible(true);  // Always show the sign-up modal
+  //   };
+  //   checkUserSignUpStatus();
+  // }, []);
 
   const handleDobChange = (input: string) => {
     const cleaned = input.replace(/[^\d]/g, '');
