@@ -89,7 +89,7 @@ export default function HomeScreen() {
         return;
     }
     if (currentlyHere || planningToAttend) {
-      await addDoc(collection(db, 'tracking'), {
+      await addDoc(collection(db, 'tracking', userId), {
         userId: userId || 'anonymous',  // Use 'anonymous' if no userId is found
         currentlyHere,
         planningToAttend,

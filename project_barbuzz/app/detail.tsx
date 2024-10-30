@@ -6,7 +6,7 @@ import { useLocalSearchParams, useNavigation } from 'expo-router';
 
 const DetailScreen: React.FC = () => {
   const { barName } = useLocalSearchParams();
-  const navigation = useNavigation();
+  const navigation = useNavigation(); 
 
   useLayoutEffect(() => {
     if (barName) {
