@@ -89,6 +89,12 @@ export default function HomeScreen() {
     setPinModalVisible(true); // Show the blank box modal
   };
 
+  const resetModal = () => {
+    setCurrentlyHere(false);
+    setPlanningToAttend(false);
+    setSelectedLocation(null);
+  };  
+
   const handleBuzzedSubmit = async () => {
     try {
       const userId = await AsyncStorage.getItem('userId');
@@ -114,6 +120,7 @@ export default function HomeScreen() {
       Alert.alert('Error', 'Failed to record attendance. Please try again.');
     } finally {
       setPinModalVisible(false);
+      resetModal();
     }
   };
   
