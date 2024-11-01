@@ -86,8 +86,7 @@ app.post('/signup', async (req, res) => {
 
 // Route to handle "Buzzed" submission with user UID
 app.post('/buzzed', async (req, res) => {
-  const { currentlyHere, planningToAttend, timestamp, userId } = req.body;
-  console.log("Received /buzzed request:", req.body);  // Log the request data
+  const { currentlyHere, planningToAttend, timestamp, userId, location } = req.body;
 
   if (!userId) {
     console.error("User ID is missing.");
@@ -95,22 +94,22 @@ app.post('/buzzed', async (req, res) => {
   }
 
   try {
-    // Reference the 'attendance' collection and create a new document for each submission
-    const attendanceRef = db.collection('tracking').doc();  // Create a new document in 'attendance' collection
+    const attendanceRef = db.collection('tracking').doc();
     await attendanceRef.set({
-      userId,  // Associate submission with the user's Firestore UID
+      userId,
       currentlyHere,
       planningToAttend,
-      timestamp
+      timestamp,
+      location // Now location is defined as part of req.body
     });
 
-    console.log("Attendance recorded successfully!");  // Log success
     return res.status(200).json({ message: 'Attendance recorded successfully!' });
   } catch (error) {
     console.error('Error recording attendance:', error);
     return res.status(500).json({ error: 'An error occurred while recording attendance.' });
   }
 });
+
 
 
 // Login API with Firebase Firestore

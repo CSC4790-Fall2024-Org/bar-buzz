@@ -44,6 +44,15 @@ let showLocationsOfInterest = [
   }
 ]
 
+type Location = {
+  title: string;
+  description: string;
+  location: {
+    latitude: number;
+    longitude: number;
+  };
+};
+
 export default function HomeScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [otpModalVisible, setOtpModalVisible] = useState(false); // For OTP modal
@@ -59,6 +68,7 @@ export default function HomeScreen() {
   const [isOtpSent, setIsOtpSent] = useState(false); // Track if OTP has been sent
   const mapRef = useRef<MapView | null>(null);
   const [isSignUp, setIsSignUp] = useState(true);
+  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
 
   const onRegionChange = (region: Region) => {
     console.log(region);
@@ -74,49 +84,49 @@ export default function HomeScreen() {
       }, 1000);
     }
   };
-  const handleMarkerPress = () => {
+  const handleMarkerPress = (location: Location) => {
+    setSelectedLocation(location); // Store the selected bar location
     setPinModalVisible(true); // Show the blank box modal
   };
 
   const handleBuzzedSubmit = async () => {
-  
     try {
-      const userId = await AsyncStorage.getItem('userId');  // Retrieve user ID from AsyncStorage
-      console.log("User ID:", userId);
-      console.log("Currently Here:", currentlyHere, "Planning to Attend:", planningToAttend);
+      const userId = await AsyncStorage.getItem('userId');
       if (!userId) {
         Alert.alert('Error', 'User ID not found. Please log in again.');
         return;
+      }
+      if (currentlyHere || planningToAttend) {
+        await addDoc(collection(db, 'tracking'), {
+          userId: userId || 'anonymous',
+          currentlyHere,
+          planningToAttend,
+          location: selectedLocation, // Save the selected location
+          timestamp: new Date().toISOString()
+        });
+  
+        Alert.alert('Success', 'Your attendance has been recorded in Firestore!');
+      } else {
+        Alert.alert('Error', 'Please select an option.');
+      }
+    } catch (error) {
+      console.error('Error adding document to Firestore:', error);
+      Alert.alert('Error', 'Failed to record attendance. Please try again.');
+    } finally {
+      setPinModalVisible(false);
     }
-    if (currentlyHere || planningToAttend) {
-      await addDoc(collection(db, 'tracking', userId), {
-        userId: userId || 'anonymous',  // Use 'anonymous' if no userId is found
-        currentlyHere,
-        planningToAttend,
-        timestamp: new Date().toISOString()
-      });
-
-      Alert.alert('Success', 'Your attendance has been recorded in Firestore!');
-    } else {
-      Alert.alert('Error', 'Please select an option.');
-    }
-  } catch (error) {
-    console.error('Error adding document to Firestore:', error);
-    Alert.alert('Error', 'Failed to record attendance. Please try again.');
-  } finally {
-    setPinModalVisible(false);
   };
-  }
+  
 
  //push
 //FOR REQUIRING THE SIGN ON EVERY TIME   
 
-  // useEffect(() => {
-  //   const checkUserSignUpStatus = async () => {
-  //     setModalVisible(true);  // Always show the sign-up modal
-  //   };
-  //   checkUserSignUpStatus();
-  // }, []);
+  useEffect(() => {
+    const checkUserSignUpStatus = async () => {
+      setModalVisible(true);  // Always show the sign-up modal
+    };
+    checkUserSignUpStatus();
+  }, []);
 
   const handleDobChange = (input: string) => {
     const cleaned = input.replace(/[^\d]/g, '');
@@ -272,23 +282,23 @@ const handleSignUp = async () => {
           }}
         >
           {showLocationsOfInterest.map((location, index) => (
-            <Marker
-              key={index}
-              coordinate={location.location}
-              title={location.title}
-              description={location.description}
-              pinColor={
-                index % 4 === 0 
-                  ? 'green'  
-                  : index % 4 === 1 
-                  ? 'blue'   
-                  : index % 4 === 2 
-                  ? 'red'    
-                  : 'orange' 
-              }
-              onPress={handleMarkerPress}
-            />
-          ))}
+  <Marker
+    key={index}
+    coordinate={location.location}
+    title={location.title}
+    description={location.description}
+    pinColor={
+      index % 4 === 0 
+        ? 'green'  
+        : index % 4 === 1 
+        ? 'blue'   
+        : index % 4 === 2 
+        ? 'red'    
+        : 'orange' 
+    }
+    onPress={() => handleMarkerPress(location)} // Pass the full location object
+  />
+))}
         </MapView>
 
         {/* List of locations */}
