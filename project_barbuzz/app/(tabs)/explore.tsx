@@ -5,6 +5,9 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useRouter, useNavigation } from 'expo-router'; // Use router hook
+import { db } from '../../firebase.js'; // Adjust the path if necessary
+import { collection, getDocs } from 'firebase/firestore';
+
 
 interface Item {
   name: string;
@@ -58,7 +61,7 @@ const TabTwoScreen: React.FC = () => {
   
     // Push to the router using the selected routePath and barName
     router.push({
-      pathname: routePath as "/detail" | "/detailGrog" | "/detailMcSoreleys" | "/detailFlips", // Explicitly specify the type
+      pathname: routePath as "/detail" | "/detailGrog" | "/detailMcSoreleys" | "/detailFlips",
       params: { barName: item.name },
     });
   };

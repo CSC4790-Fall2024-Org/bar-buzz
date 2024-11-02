@@ -5,6 +5,8 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const admin = require('firebase-admin');  // Add Firebase Admin SDK
 const { sendOtp, verifyOtp } = require('./otp'); // Import the OTP functions from otp.js
+const response = await fetch(`http://10.0.2.2:8082/attendance/${encodeURIComponent(barName)}`);
+
 
 const app = express();
 const PORT = 8082;
@@ -86,6 +88,7 @@ app.post('/signup', async (req, res) => {
 
 // Route to handle "Buzzed" submission with user UID
 app.post('/buzzed', async (req, res) => {
+  console.log('Received buzzed request:', req.body);
   const { currentlyHere, planningToAttend, timestamp, userId, location } = req.body;
 
   if (!userId) {
@@ -111,7 +114,6 @@ app.post('/buzzed', async (req, res) => {
 });
 
 
-
 // Login API with Firebase Firestore
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
@@ -131,7 +133,28 @@ app.post('/login', async (req, res) => {
   }
 });
 
+app.get('/attendance/:location', async (req, res) => {
+  const { location } = req.params;
+
+  try {
+    const snapshot = await db.collection('tracking').where('location', '==', location).get();
+    if (snapshot.empty) {
+      return res.status(404).json({ message: 'No attendance data found for this location.' });
+    }
+
+    const attendanceData = snapshot.docs.map(doc => doc.data());
+    return res.status(200).json(attendanceData);
+  } catch (error) {
+    console.error('Error fetching attendance data:', error);
+    return res.status(500).json({ error: 'An error occurred while fetching attendance data.' });
+  }
+});
+
+
 // Start the server
 app.listen(PORT, () => {
   console.log('Server running on http://localhost:${8082}/');
 });
+
+
+
