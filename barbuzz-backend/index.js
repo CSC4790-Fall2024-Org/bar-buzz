@@ -150,6 +150,23 @@ app.get('/attendance/:location', async (req, res) => {
   }
 });
 
+app.get('/user/:userId', async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const userSnapshot = await db.collection('users').doc(userId).get();
+    if (!userSnapshot.exists) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    return res.status(200).json(userSnapshot.data());
+  } catch (error) {
+    console.error('Error fetching user data:', error);
+    return res.status(500).json({ error: 'An error occurred while fetching user data.' });
+  }
+});
+
+
 
 // Start the server
 app.listen(PORT, () => {
