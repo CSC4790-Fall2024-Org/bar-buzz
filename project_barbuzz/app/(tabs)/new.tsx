@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { StyleSheet, View, Image, ScrollView, Dimensions } from 'react-native';  // Import ScrollView for scrollable content
 import { ThemedText } from '@/components/ThemedText';  // Ensure these paths and exports are correct
