@@ -5,25 +5,16 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const admin = require('firebase-admin');  // Add Firebase Admin SDK
 const { sendOtp, verifyOtp } = require('./otp'); // Import the OTP functions from otp.js
-const response = await fetch(`http://10.0.2.2:8082/attendance/${encodeURIComponent(barName)}`);
-
 
 const app = express();
 const PORT = 8082;
 
-/*
-const mapButtons = require('./mapButtons');
-
-// Use the mapButtons routes
-app.use('/api/map', mapButtons);
-*/
-
+// Middleware
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
-
 app.use(bodyParser.json());
 
 // Initialize Firebase Admin SDK
@@ -33,35 +24,23 @@ admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
 });
 
-const db = admin.firestore();  // Firestore reference
-
 /*
-// Route to send OTP
-app.post('/send-otp', async (req, res) => {
-  const { email } = req.body;
-  
-  try {
-    const result = await sendOtp(email); // Call the async function from otp.js
-    res.status(200).json(result);
-  } catch (error) {
-    console.error('Error sending OTP:', error.message);
-    res.status(400).json({ error: error.message });
-  }
-});
+// Firebase Web SDK Configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyBQ0fM91zbHtscOYfkmTmvDnIedFWKueVw",
+  authDomain: "barbuzz-29b1a.firebaseapp.com",
+  projectId: "barbuzz-29b1a",
+  storageBucket: "barbuzz-29b1a.appspot.com",
+  messagingSenderId: "789864164143",
+  appId: "1:789864164143:web:dd17f0fe1be425512b0fda",
+  measurementId: "G-HLLP1H2B65"
+};
 
-// Route to handle verifying OTP
-app.post('/verify-otp', async (req, res) => {
-  const { email, otp } = req.body;
-  
-  try {
-    const result = await verifyOtp(email, otp); // Call the async function from otp.js
-    res.status(200).json(result);
-  } catch (error) {
-    console.error('Error verifying OTP:', error.message);
-    res.status(400).json({ error: error.message });
-  }
-});
-*/
+const firebaseApp = initializeApp(firebaseConfig);
+const auth = getAuth(firebaseApp);
+*/ 
+
+const db = admin.firestore();  // Firestore reference
 
 // Sign up API with Firebase Firestore
 app.post('/signup', async (req, res) => {
@@ -77,7 +56,7 @@ app.post('/signup', async (req, res) => {
       name,
       email,
       dob,
-      password
+      password // Consider using Firebase Authentication for secure password management
     });
     return res.status(201).json({ message: 'User registered successfully!' });
   } catch (error) {
@@ -112,7 +91,6 @@ app.post('/buzzed', async (req, res) => {
     return res.status(500).json({ error: 'An error occurred while recording attendance.' });
   }
 });
-
 
 // Login API with Firebase Firestore
 app.post('/login', async (req, res) => {
@@ -166,12 +144,11 @@ app.get('/user/:userId', async (req, res) => {
   }
 });
 
-
-
 // Start the server
 app.listen(PORT, () => {
-  console.log('Server running on http://localhost:${8082}/');
+  console.log(`Server running on http://localhost:${PORT}/`);
 });
+
 
 
 

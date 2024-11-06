@@ -5,8 +5,16 @@ import axios from 'axios';
 import { StatusBar } from 'expo-status-bar';
 import MapView, { Marker, Region } from 'react-native-maps';
 import { collection, getDocs, query, where, addDoc } from 'firebase/firestore';
-import { db } from '../../firebase.js';  // Import the Firestore database from firebase.js
 import { ScrollView } from 'react-native';
+// Import Firestore and Auth from firebase.js
+// index.tsx
+import { auth, db } from '../config/firebaseConfig.js';
+//import { auth } from '../../../barbuzz-backend/firebaseConfig.js'; // Ensure the path is correct
+
+
+//import { auth } from 'firebase/auth';
+//import { auth } from '@/barbuzz-backend/firebaseConfig.js'; 
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 
 
 let showLocationsOfInterest = [
@@ -243,13 +251,24 @@ const handleSignUp = async () => {
     console.log("Sending request to Firestore...");
 
     // Step 1: Add a new document to Firestore 'users' collection
-    const userRef = await addDoc(collection(db, 'users'), {
+    const userRef = await createUserWithEmailAndPassword(auth, email, password);
+    await addDoc(collection(db, 'users'), {
       name,
       email,
       dob: formattedDob,
-      password
+      userId: userRef.user.uid
     });
 
+    await AsyncStorage.setItem('userId', userRef.user.uid); // Store userId in AsyncStorage
+      setModalVisible(false); // Close the modal after successful sign-up
+      Alert.alert('Success', `Welcome to BarBuzz, ${name}!`);
+    } catch (error) {
+      const errorMessage = (error instanceof Error) ? error.message : 'An unknown error occurred';
+      console.error('Error signing up:', errorMessage);
+      Alert.alert('Error', errorMessage);
+    }
+  };
+/*
     // Step 2: Retrieve and store the Firestore document ID (userId) for the newly registered user
     const userId = userRef.id;  // Firestore's unique document ID
     await AsyncStorage.setItem('userId', userId);  // Store userId in AsyncStorage
@@ -269,7 +288,7 @@ const handleSignUp = async () => {
   // requestOtp();  // Uncomment if OTP functionality is needed
 };
 
-  
+  */
 
   return (
     <>
@@ -344,7 +363,7 @@ const handleSignUp = async () => {
 */}
 
       {/* Sign-up or Sign-in modal */}
-<Modal
+      <Modal
   animationType="slide"
   transparent={true}
   visible={modalVisible}

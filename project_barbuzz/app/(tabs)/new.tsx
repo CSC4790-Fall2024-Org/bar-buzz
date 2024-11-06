@@ -1,14 +1,16 @@
-
-import React from 'react';
-import { StyleSheet, View, Image, ScrollView, Dimensions } from 'react-native';  // Import ScrollView for scrollable content
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, View, Image, ScrollView, Dimensions, ActivityIndicator } from 'react-native';  // Import ScrollView for scrollable content
 import { ThemedText } from '@/components/ThemedText';  // Ensure these paths and exports are correct
 import { ThemedView } from '@/components/ThemedView';  // Ensure these paths and exports are correct
 import * as Progress from 'react-native-progress';  // Use cross-platform progress bar library
+import { getAuth } from 'firebase/auth';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
 
 const screenWidth = Dimensions.get('window').width;  // Get screen width for responsive design
 
 export default function HomeScreen() {
-  const name = "Name";  // Replace with your name
+  const [name, setName] = useState('');  // State to hold the user's name
+  const [loading, setLoading] = useState(true);  // Loading state
   const school = "Villanova University";  // Replace with your school
 
   const visits = [
@@ -23,6 +25,36 @@ export default function HomeScreen() {
 
   // Define an array of colors corresponding to each bar
   const barColors = ['#008000', '#00BFFF', '#FF0000', '#ffa500'];
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const auth = getAuth();
+      const firestore = getFirestore();
+      const user = auth.currentUser;
+      if (user) {
+        try {
+          const userDoc = await getDoc(doc(firestore, 'users', user.uid)); // Change 'users' to your collection name
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            setName(userData.name); // Assuming the field in Firestore is named 'name'
+          } else {
+            console.log("No such document!");
+          }
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+        }
+      } else {
+        console.log("No user is signed in.");
+      }
+      setLoading(false);
+    };
+
+    fetchUserData();
+  }, []);
+
+  if (loading) {
+    return <ActivityIndicator size="large" color="#0000ff" />;
+  }
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
