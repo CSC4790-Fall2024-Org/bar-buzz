@@ -21,7 +21,7 @@ import { getFirestore, doc, setDoc } from 'firebase/firestore';
 
 let showLocationsOfInterest = [
   {
-    title: "The Grog Bar & Grill",
+    title: "The Grog Grill",
     location: {
       latitude: 40.02257990031775,
       longitude: -75.32031440725875
@@ -37,7 +37,7 @@ let showLocationsOfInterest = [
     description: "Buzz in"
   },
   {
-    title: "McSoreley's Ale House",
+    title: "McSorley's",
     location: {
       latitude: 39.993037576566806,
       longitude: -75.29751787647021
