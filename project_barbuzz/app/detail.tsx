@@ -1,17 +1,18 @@
 import React, { useEffect, useState, useLayoutEffect } from 'react';
-import { StyleSheet, View, ScrollView } from 'react-native';
+import { StyleSheet, View, ScrollView, SafeAreaView } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
-import { db } from '../firebase';  // Ensure correct path
+import { db } from '../firebase';
 import { collection, getDocs, query, where, doc, getDoc } from 'firebase/firestore';
 import { onSnapshot } from 'firebase/firestore';
 
 const DetailScreen: React.FC = () => {
   const { barName } = useLocalSearchParams();
   const navigation = useNavigation();
-  const [people, setPeople] = useState<{ name: string }[]>([]); // Updated type to only store name
-  const [loading, setLoading] = useState<boolean>(true); // Loading state
-  const [error, setError] = useState<string | null>(null); // Error state
+  const [currentPeople, setCurrentPeople] = useState<{ name: string }[]>([]);
+  const [planningPeople, setPlanningPeople] = useState<{ name: string }[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   useLayoutEffect(() => {
     if (barName) {
@@ -20,89 +21,171 @@ const DetailScreen: React.FC = () => {
   }, [barName, navigation]);
 
   useEffect(() => {
-    const fetchAttendanceData = () => {
-      const q = query(
+    const fetchAttendanceData = async () => {
+      const qCurrent = query(
         collection(db, 'tracking'),
-        where('location.title', '==', barName), // Adjusted query to check location.title
+        where('location.title', '==', barName), 
         where('currentlyHere', '==', true)
       );
 
-      const unsubscribe = onSnapshot(q, async (querySnapshot) => {
-        try {
-          const attendeeIds = querySnapshot.docs.map((doc) => doc.data().userId);
+      const qPlanning = query(
+        collection(db, 'tracking'),
+        where('location.title', '==', barName), 
+        where('currentlyHere', '==', false)
+      );
 
-          const enrichedPeople = await Promise.all(
-            attendeeIds.map(async (userId) => {
-              const userDocRef = doc(db, "users", userId);
-              const userDoc = await getDoc(userDocRef);
+      try {
+        const currentQuerySnapshot = await getDocs(qCurrent);
+        const planningQuerySnapshot = await getDocs(qPlanning);
 
-              return userDoc.exists() ? { name: userDoc.data().name } : { name: "Unknown User" };
-            })
-          );
+        // Fetch current people
+        const currentAttendees = currentQuerySnapshot.docs.map((doc) => doc.data().userId);
+        const currentPeopleList = await Promise.all(
+          currentAttendees.map(async (userId) => {
+            const userDocRef = doc(db, "users", userId);
+            const userDoc = await getDoc(userDocRef);
+            return userDoc.exists() ? { name: userDoc.data().name } : { name: "Unknown User" };
+          })
+        );
 
-          setPeople(enrichedPeople);
-          setLoading(false); // Data fetched successfully
-        } catch (err) {
-          setError('Failed to load data');
-          setLoading(false); // Stop loading on error
-        }
-      });
+        // Fetch planning people
+        const planningAttendees = planningQuerySnapshot.docs.map((doc) => doc.data().userId);
+        const planningPeopleList = await Promise.all(
+          planningAttendees.map(async (userId) => {
+            const userDocRef = doc(db, "users", userId);
+            const userDoc = await getDoc(userDocRef);
+            return userDoc.exists() ? { name: userDoc.data().name } : { name: "Unknown User" };
+          })
+        );
 
-      return () => unsubscribe();  // Cleanup on component unmount
+        // Set state with fetched data
+        setCurrentPeople(currentPeopleList);
+        setPlanningPeople(planningPeopleList);
+      } catch (err) {
+        console.error("Error fetching data: ", err);
+        setError('Failed to load data');
+      } finally {
+        setLoading(false); // Set loading to false after data fetching is complete
+      }
     };
 
-    fetchAttendanceData();
+    if (barName) {
+      fetchAttendanceData();
+    }
   }, [barName]);
 
   if (loading) {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.fullScreenContainer}>
         <ThemedText style={styles.nameText}>Loading...</ThemedText>
-      </View>
+      </SafeAreaView>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.fullScreenContainer}>
         <ThemedText style={styles.nameText}>{error}</ThemedText>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.fullScreenContainer}>
       <ScrollView contentContainerStyle={styles.peopleListContainer}>
-        {people.length > 0 ? (
-          people.map(({ name }, index) => (
-            <ThemedText key={index} style={styles.nameText}>
-              {name} {/* Only show the name */}
-            </ThemedText>
-          ))
-        ) : (
-          <ThemedText style={styles.nameText}>No one here yet!</ThemedText>
-        )}
+        <View style={styles.wrapper}>
+          {/* Currently Here Column */}
+          <View style={styles.column}>
+            <ThemedText style={styles.columnTitle}>Currently Here</ThemedText>
+            {currentPeople.length > 0 ? (
+              currentPeople.map(({ name }, index) => (
+                <View
+                  key={index}
+                  style={[
+                    styles.row,
+                    { backgroundColor: index % 2 === 0 ? '#ffecb3' : '#fff8e1' },
+                  ]}
+                >
+                  <ThemedText style={styles.nameText}>{name}</ThemedText>
+                </View>
+              ))
+            ) : (
+              <View style={styles.row}>
+                <ThemedText style={styles.nameText}>No one here yet!</ThemedText>
+              </View>
+            )}
+          </View>
+
+          {/* Divider */}
+          <View style={styles.verticalDivider} />
+
+          {/* Planning to Attend Column */}
+          <View style={styles.column}>
+            <ThemedText style={styles.columnTitle}>Planning to Attend</ThemedText>
+            {planningPeople.length > 0 ? (
+              planningPeople.map(({ name }, index) => (
+                <View
+                  key={index}
+                  style={[
+                    styles.row,
+                    { backgroundColor: index % 2 === 0 ? '#ffecb3' : '#fff8e1' },
+                  ]}
+                >
+                  <ThemedText style={styles.nameText}>{name}</ThemedText>
+                </View>
+              ))
+            ) : (
+              <View style={styles.row}>
+                <ThemedText style={styles.nameText}>No one planning to attend yet!</ThemedText>
+              </View>
+            )}
+          </View>
+        </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  fullScreenContainer: {
     flex: 1,
     backgroundColor: 'white',
-    paddingHorizontal: 20,
-    paddingTop: 30,
   },
   peopleListContainer: {
-    backgroundColor: '#f8f9fa',
-    padding: 15,
-    borderRadius: 10,
+    flexGrow: 1,
+    paddingHorizontal: 10,
+    backgroundColor: '#fffbe0', 
+  },
+  wrapper: {
+    flexDirection: 'row',
+    flex: 1,
+    alignItems: 'flex-start', 
+    justifyContent: 'center', 
+  },
+  column: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  columnTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    paddingVertical: 20,
+  },
+  row: {
+    paddingVertical: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%', 
   },
   nameText: {
-    fontSize: 20,
-    marginVertical: 10,
+    fontSize: 16,
     color: '#333',
+  },
+  verticalDivider: {
+    width: 1,
+    backgroundColor: 'black',
+    height: '100%', 
   },
 });
 
