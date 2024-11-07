@@ -4,57 +4,77 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import * as Progress from 'react-native-progress';
 import { getAuth } from 'firebase/auth';
-import { getFirestore, collection, query, where, getDocs, doc, getDoc, QueryDocumentSnapshot } from 'firebase/firestore';
+import { getFirestore, collection, query, where, onSnapshot, doc, getDoc } from 'firebase/firestore';
 
 const screenWidth = Dimensions.get('window').width;
 
 export default function HomeScreen() {
-  const [name, setName] = useState(''); // State to hold the user's name
-  const [visits, setVisits] = useState<{ name: string; visits: number }[]>([]); // State to hold visits data
-  const [loading, setLoading] = useState(true); // Loading state
-  const school = "Villanova University"; // Replace with your school
-
-  const allBars = [
-    { name: "The Grog", visits: 0 },
+  const [name, setName] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [visits, setVisits] = useState([
+    { name: "The Grog Grill", visits: 0 },
     { name: "Kelly's Taproom", visits: 0 },
-    { name: "McSorelsey's", visits: 0 },
+    { name: "McSorley's", visits: 0 },
     { name: "Flip & Bailey's", visits: 0 },
-  ];
-  
+  ]);
+
+  const barColors = ['#008000', '#00BFFF', '#FF0000', '#ffa500'];
+
   const fetchProfileData = async () => {
     const auth = getAuth();
     const firestore = getFirestore();
     const user = auth.currentUser;
-  
+
     if (user) {
       try {
-        // Fetch user profile data
-        const userDoc = await getDoc(doc(firestore, 'users', user.uid));
+        console.log('Fetching user profile data...');
+        const userDocRef = doc(firestore, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
         if (userDoc.exists()) {
           const userData = userDoc.data();
-          setName(userData.name); // Assuming 'name' is a field in Firestore
+          setName(userData.name || ''); // Assuming 'name' is a field in Firestore
+          console.log('User name set:', userData.name);
         } else {
-          console.log('No such document!');
+          console.log('User profile document not found.');
+          setName('Unknown User');
         }
-  
-        // Fetch tracking data for the user
-        const trackingQuery = query(
-          collection(firestore, 'tracking'),
-          where('userId', '==', user.uid)
-        );
-        const trackingSnapshot = await getDocs(trackingQuery);
-  
-        let visitsData: { name: string; visits: number }[] = [];
-        if (!trackingSnapshot.empty) {
-          visitsData = trackingSnapshot.docs.map((doc: QueryDocumentSnapshot) => {
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+        setName('Error Loading Name');
+      }
+    }
+  };
+
+  useEffect(() => {
+    const auth = getAuth();
+    const firestore = getFirestore();
+    const user = auth.currentUser;
+
+    if (user) {
+      console.log('User is signed in:', user.uid);
+
+      // Call fetchProfileData to load the user profile
+      fetchProfileData();
+
+      // Real-time listener for tracking data
+      const trackingQuery = query(
+        collection(firestore, 'tracking'),
+        where('userId', '==', user.uid)
+      );
+
+      const unsubscribe = onSnapshot(
+        trackingQuery,
+        (snapshot) => {
+          console.log('Snapshot received. Docs count:', snapshot.docs.length);
+
+          const visitsData = snapshot.docs.map((doc) => {
             const visit = doc.data() as { location: { title: string } };
             return {
               name: visit.location.title,
               visits: 1,
             };
           });
-  
-          // Aggregate visits by location title
+
           const aggregatedVisits = visitsData.reduce<{ name: string; visits: number }[]>(
             (acc, visit) => {
               const existingIndex = acc.findIndex(item => item.name === visit.name);
@@ -67,37 +87,37 @@ export default function HomeScreen() {
             },
             []
           );
-  
-          // Ensure all bars are present, with zero visits if not already in aggregatedVisits
-          const completeVisitsData = allBars.map(bar => {
-            const existingBar = aggregatedVisits.find(item => item.name === bar.name);
-            return existingBar ? existingBar : bar;
+
+          const updatedVisits = [
+            { name: "The Grog Grill", visits: 0 },
+            { name: "Kelly's Taproom", visits: 0 },
+            { name: "McSorley's", visits: 0 },
+            { name: "Flip & Bailey's", visits: 0 },
+          ].map((bar) => {
+            const match = aggregatedVisits.find(item => item.name === bar.name);
+            return match ? { ...bar, visits: match.visits } : bar;
           });
-  
-          setVisits(completeVisitsData);
-        } else {
-          // If no tracking data, show all bars with zero visits
-          setVisits(allBars);
+
+          setVisits(updatedVisits);
+          setLoading(false);
+        },
+        (error) => {
+          console.error('Error listening to Firestore updates:', error);
+          setLoading(false);
         }
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-      }
+      );
+
+      return () => {
+        console.log('Unsubscribing from snapshot listener');
+        unsubscribe();
+      };
     } else {
       console.log('No user is signed in.');
+      setLoading(false);
     }
-    setLoading(false);
-  };
-  
-
-  useEffect(() => {
-    fetchProfileData();
   }, []);
 
-  // Sum of all visits
   const totalVisits = visits.reduce((acc, place) => acc + place.visits, 0);
-
-  // Define an array of colors corresponding to each bar
-  const barColors = ['#008000', '#00BFFF', '#FF0000', '#ffa500'];
 
   if (loading) {
     return <ActivityIndicator size="large" color="#0000ff" />;
@@ -106,31 +126,26 @@ export default function HomeScreen() {
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.container}>
-        {/* Header */}
         <View style={styles.header}>
-          {/* Person Logo */}
           <Image 
-            source={require('@/assets/images/usericon.png')} // Ensure this path is correct
+            source={require('@/assets/images/usericon.png')}
             style={styles.logo}
           />
-          {/* Name and School */}
           <View style={styles.headerTextContainer}>
             <ThemedText type="title" style={styles.name}>{name}</ThemedText>
-            <ThemedText type="subtitle" style={styles.school}>{school}</ThemedText>
+            <ThemedText type="subtitle" style={styles.school}>Villanova University</ThemedText>
           </View>
         </View>
 
-        {/* Monthly Recap */}
         <ThemedView style={styles.contentContainer}>
           <ThemedText type="title" style={styles.recapTitle}>Monthly Recap</ThemedText>
-          {/* Bar Chart */}
           <View style={styles.chartContainer}>
             {visits.map((place, index) => (
               <View key={index} style={styles.chartBarContainer}>
                 <View 
                   style={[
                     styles.chartBar, 
-                    { height: (place.visits / totalVisits) * 150, backgroundColor: barColors[index] }, // Dynamic height & color
+                    { height: (place.visits / (totalVisits || 1)) * 150, backgroundColor: barColors[index] },
                   ]} 
                 />
                 <ThemedText style={styles.barLabel}>{place.name}</ThemedText>
@@ -139,27 +154,24 @@ export default function HomeScreen() {
           </View>
         </ThemedView>
 
-        {/* Superstar Section */}
         <View style={styles.superstarContainer}>
           <ThemedText style={styles.superstarText}>You are a Grog Superstar!</ThemedText>
         </View>
 
-        {/* Visit Progress */}
         <View style={styles.visitsContainer}>
           {visits.map((place, index) => (
             <View key={index} style={styles.visitRow}>
               <ThemedText style={styles.visitText}>
                 {place.visits}/{totalVisits} Visits to {place.name}
               </ThemedText>
-              {/* Progress bar adjusted to full width */}
               <Progress.Bar 
-                progress={place.visits / totalVisits} 
-                width={screenWidth * 0.9} // Set width dynamically relative to screen width
-                color={barColors[index]} // Use the same color as the bar
+                progress={place.visits / (totalVisits || 1)}
+                width={screenWidth * 0.9}
+                color={barColors[index]}
                 style={styles.progressBar} 
-                borderRadius={10} // Smooth bar edges
-                height={12} // Adjust height for better appearance
-                unfilledColor="#e0e0e0" // Color of the unfilled portion
+                borderRadius={10}
+                height={12}
+                unfilledColor="#e0e0e0"
               />
             </View>
           ))}
@@ -175,7 +187,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: '#ffffff', // white
+    backgroundColor: '#ffffff',
   },
   header: {
     flexDirection: 'row',
@@ -198,7 +210,7 @@ const styles = StyleSheet.create({
   },
   school: {
     fontSize: 16,
-    color: '#666',  // Gray color
+    color: '#666',
   },
   contentContainer: {
     paddingHorizontal: 16,
@@ -209,21 +221,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 15,
   },
-  chartBackground: {
-    backgroundColor: '#ffffff', // White background
-    padding: 10,  // Optional padding for visual appeal
-    borderRadius: 10,  // Optional rounded corners
-    elevation: 3,  // Optional shadow for Android
-    shadowColor: '#000',  // Optional shadow color for iOS
-    shadowOffset: { width: 0, height: 1 },  // Optional shadow offset for iOS
-    shadowOpacity: 0.2,  // Optional shadow opacity for iOS
-    shadowRadius: 1,  // Optional shadow radius for iOS
-  },
   chartContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    alignItems: 'flex-end',  // Align bars to the bottom
-    height: 150,  // Set a fixed height for the chart
+    alignItems: 'flex-end',
+    height: 150,
   },
   chartBarContainer: {
     justifyContent: 'center',
@@ -231,7 +233,6 @@ const styles = StyleSheet.create({
   },
   chartBar: {
     width: 30,
-    backgroundColor: '#b19cd9',  // Default bar color (Grog)
   },
   barLabel: {
     marginTop: 10,
@@ -245,7 +246,7 @@ const styles = StyleSheet.create({
   superstarText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#000000',  
+    color: '#000000',
   },
   visitsContainer: {
     paddingHorizontal: 16,

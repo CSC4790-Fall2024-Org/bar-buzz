@@ -14,14 +14,14 @@ const DetailGrog: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useLayoutEffect(() => {
-    navigation.setOptions({ title: 'People at The Grog Bar & Grill' });
+    navigation.setOptions({ title: 'People at The Grog Grill' });
   }, [navigation]);
 
   useEffect(() => {
     const fetchAttendanceData = () => {
       const qCurrent = query(
         collection(db, 'tracking'),
-        where('location.title', '==', "The Grog Bar & Grill"), 
+        where('location.title', '==', "The Grog Bar & Grill"), // Adjusted query to check the Grog Bar's name
         where('currentlyHere', '==', true)
       );
       const qPlanning = query(

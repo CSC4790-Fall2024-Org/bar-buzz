@@ -14,14 +14,14 @@ const DetailMcSoreleys: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useLayoutEffect(() => {
-    navigation.setOptions({ title: 'People at McSoreley\'s Ale House' });
+    navigation.setOptions({ title: 'People at McSorley\'s Ale House' });
   }, [navigation]);
 
   useEffect(() => {
     const fetchAttendanceData = () => {
       const qCurrent = query(
         collection(db, 'tracking'),
-        where('location.title', '==', "McSoreley's Ale House"),
+        where('location.title', '==', "McSoreley's Ale House"), // Check if the title is matching in Firestore
         where('currentlyHere', '==', true)
       );
       const qPlanning = query(
@@ -35,28 +35,8 @@ const DetailMcSoreleys: React.FC = () => {
 
       const unsubscribeCurrent = onSnapshot(qCurrent, async (querySnapshot) => {
         try {
-          const attendeeIdsCurrent = querySnapshot.docs.map((doc) => doc.data().userId);
-
-          const enrichedCurrentPeople = await Promise.all(
-            attendeeIdsCurrent.map(async (userId) => {
-              const userDocRef = doc(db, "users", userId);
-              const userDoc = await getDoc(userDocRef);
-
-              return userDoc.exists() ? { name: userDoc.data().name } : { name: "Unknown User" };
-            })
-          );
-
-          setCurrentPeople(enrichedCurrentPeople);
-          currentDataFetched = true;
-          if (currentDataFetched && planningDataFetched) setLoading(false);  
-        } catch (err) {
-          setError('Failed to load current attendance data');
-        }
-      });
-
-      const unsubscribePlanning = onSnapshot(qPlanning, async (querySnapshot) => {
-        try {
-          const attendeeIdsPlanning = querySnapshot.docs.map((doc) => doc.data().userId);
+          console.log("Querying for McSoreley's Ale House attendance data...");
+          const attendeeIds = querySnapshot.docs.map((doc) => doc.data().userId);
 
           const enrichedPlanningPeople = await Promise.all(
             attendeeIdsPlanning.map(async (userId) => {

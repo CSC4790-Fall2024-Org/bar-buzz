@@ -15,8 +15,8 @@ interface Item {
 
 const DATA: Item[] = [
   { name: "Kelly's Taproom", key: "1" },
-  { name: "The Grog Bar & Grill", key: "2" },
-  { name: "McSoreley's Ale House", key: "3" },
+  { name: "The Grog Grill", key: "2" },
+  { name: "McSorley's", key: "3" },
   { name: "Flip & Bailey's", key: "4" },
 ];
 
@@ -91,10 +91,10 @@ const TabTwoScreen: React.FC = () => {
       case "Kelly's Taproom":
         routePath = '/detail';
         break;
-      case "The Grog Bar & Grill":
+      case "The Grog Grill":
         routePath = '/detailGrog';
         break;
-      case "McSoreley's Ale House":
+      case "McSorley's":
         routePath = '/detailMcSoreleys';
         break;
       case "Flip & Bailey's":
