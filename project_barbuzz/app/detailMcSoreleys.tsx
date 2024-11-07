@@ -13,20 +13,20 @@ const DetailMcSoreleys: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useLayoutEffect(() => {
-    navigation.setOptions({ title: 'People at McSoreley\'s Ale House' });
+    navigation.setOptions({ title: 'People at McSorley\'s Ale House' });
   }, [navigation]);
 
   useEffect(() => {
     const fetchAttendanceData = () => {
       const q = query(
         collection(db, 'tracking'),
-        where('location.title', '==', "McSoreley's Ale House"), // Check if the title is matching in Firestore
+        where('location.title', '==', "McSorley's"), // Check if the title is matching in Firestore
         where('currentlyHere', '==', true)
       );
 
       const unsubscribe = onSnapshot(q, async (querySnapshot) => {
         try {
-          console.log("Querying for McSoreley's Ale House attendance data...");
+          console.log("Querying for McSorley's Ale House attendance data...");
           const attendeeIds = querySnapshot.docs.map((doc) => doc.data().userId);
 
           const enrichedPeople = await Promise.all(
