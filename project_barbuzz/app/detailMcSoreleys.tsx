@@ -38,8 +38,30 @@ const DetailMcSoreleys: React.FC = () => {
           console.log("Querying for McSoreley's Ale House attendance data...");
           const attendeeIds = querySnapshot.docs.map((doc) => doc.data().userId);
 
+          const enrichedCurrentPeople = await Promise.all(
+            attendeeIds.map(async (userId: string) => {
+              const userDocRef = doc(db, "users", userId);
+              const userDoc = await getDoc(userDocRef);
+
+              return userDoc.exists() ? { name: userDoc.data().name } : { name: "Unknown User" };
+            })
+          );
+
+          setCurrentPeople(enrichedCurrentPeople);
+          currentDataFetched = true;
+          if (currentDataFetched && planningDataFetched) setLoading(false);  
+        } catch (err) {
+          setError('Failed to load current attendance data');
+        }
+      });
+
+      const unsubscribePlanning = onSnapshot(qPlanning, async (querySnapshot) => {
+        try {
+          console.log("Querying for planning to attend McSoreley's Ale House...");
+          const attendeeIds = querySnapshot.docs.map((doc) => doc.data().userId);
+
           const enrichedPlanningPeople = await Promise.all(
-            attendeeIdsPlanning.map(async (userId) => {
+            attendeeIds.map(async (userId: string) => {
               const userDocRef = doc(db, "users", userId);
               const userDoc = await getDoc(userDocRef);
 
