@@ -1,13 +1,12 @@
-import React, { useLayoutEffect } from 'react';
+import React, { useLayoutEffect, useState, useEffect } from 'react';
 import { StyleSheet, TouchableOpacity, Image, View } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { useRouter, useNavigation } from 'expo-router'; // Use router hook
-import { db } from '../../firebase.js'; // Adjust the path if necessary
-import { collection, getDocs } from 'firebase/firestore';
-
+import { useRouter, useNavigation } from 'expo-router';
+import { db } from '../../firebase'; // Adjust the path if necessary
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
 
 interface Item {
   name: string;
@@ -21,26 +20,73 @@ const DATA: Item[] = [
   { name: "Flip & Bailey's", key: "4" },
 ];
 
-const PEOPLE_COUNT = {
-  "1": 25,
-  "2": 40,
-  "3": 15,
-  "4": 60,
-};
-
 const TabTwoScreen: React.FC = () => {
   const router = useRouter();
   const navigation = useNavigation();
+  const [peopleCount, setPeopleCount] = useState<{ [key: string]: { planning: number; currentlyHere: number; total: number } }>({});
 
   useLayoutEffect(() => {
     navigation.setOptions({ title: 'Bars' });
   }, [navigation]);
 
+  // Fetch the people counts from Firebase when the component mounts
+  useEffect(() => {
+    const fetchPeopleCount = () => {
+      const trackingCollection = collection(db, 'tracking');
+      
+      DATA.forEach((item) => {
+        // Query to get people planning to attend the bar
+        const planningQuery = query(
+          trackingCollection,
+          where("location.title", "==", item.name),
+          where("planningToAttend", "==", true)
+        );
+
+        // Query to get people currently at the bar
+        const currentlyHereQuery = query(
+          trackingCollection,
+          where("location.title", "==", item.name),
+          where("currentlyHere", "==", true)
+        );
+
+        // Subscribe to real-time updates for both queries
+        const unsubscribePlanning = onSnapshot(planningQuery, (snapshot) => {
+          const planningCount = snapshot.size;
+          setPeopleCount((prev) => ({
+            ...prev,
+            [item.name]: {
+              ...prev[item.name],
+              planning: planningCount,
+              total: (prev[item.name]?.currentlyHere || 0) + planningCount,  // Update total count
+            },
+          }));
+        });
+
+        const unsubscribeCurrentlyHere = onSnapshot(currentlyHereQuery, (snapshot) => {
+          const currentlyHereCount = snapshot.size;
+          setPeopleCount((prev) => ({
+            ...prev,
+            [item.name]: {
+              ...prev[item.name],
+              currentlyHere: currentlyHereCount,
+              total: (prev[item.name]?.planning || 0) + currentlyHereCount,  // Update total count
+            },
+          }));
+        });
+
+        // Cleanup the subscriptions when the component unmounts
+        return () => {
+          unsubscribePlanning();
+          unsubscribeCurrentlyHere();
+        };
+      });
+    };
+
+    fetchPeopleCount();
+  }, []);
+
   const handlePress = (item: Item) => {
-    // Declare routePath as an empty string
-    let routePath: string = ''; // Cast as string type
-  
-    // Set routePath based on the item name
+    let routePath = '';
     switch (item.name) {
       case "Kelly's Taproom":
         routePath = '/detail';
@@ -56,23 +102,21 @@ const TabTwoScreen: React.FC = () => {
         break;
       default:
         console.warn(`No page found for ${item.name}`);
-        return; // Exit function if no matching route is found
+        return;
     }
-  
-    // Push to the router using the selected routePath and barName
+
     router.push({
       pathname: routePath as "/detail" | "/detailGrog" | "/detailMcSoreleys" | "/detailFlips",
       params: { barName: item.name },
     });
   };
-  
 
   const renderItem = ({ item }: { item: Item }) => (
     <TouchableOpacity onPress={() => handlePress(item)} style={styles.itemContainer}>
       <View style={styles.itemContent}>
         <ThemedText style={styles.item}>{item.name}</ThemedText>
         <ThemedText style={styles.peopleCount}>
-          {PEOPLE_COUNT[item.key as keyof typeof PEOPLE_COUNT]} people
+          {peopleCount[item.name] ? `${peopleCount[item.name].total} people` : 'Loading...'}
         </ThemedText>
       </View>
     </TouchableOpacity>
@@ -83,10 +127,7 @@ const TabTwoScreen: React.FC = () => {
       <FlatList
         ListHeaderComponent={
           <ThemedView style={styles.headerContainer}>
-            <Image
-              source={require('@/assets/images/BarBuzz2.png')}
-              style={styles.BBlogo}
-            />
+            <Image source={require('@/assets/images/BarBuzz2.png')} style={styles.BBlogo} />
             <ThemedText style={styles.title}>Villanova University</ThemedText>
             <ThemedText style={styles.subtitle}>Villanova, PA</ThemedText>
           </ThemedView>
@@ -148,6 +189,3 @@ const styles = StyleSheet.create({
 });
 
 export default TabTwoScreen;
-
-
-

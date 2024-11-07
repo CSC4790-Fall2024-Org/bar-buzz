@@ -1,57 +1,51 @@
 import React, { useEffect, useState, useLayoutEffect } from 'react';
-import { StyleSheet, View, ScrollView, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, ScrollView } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { useNavigation } from 'expo-router';
+import { db } from '../firebase';  // Ensure correct path
+import { collection, query, where, doc, getDoc } from 'firebase/firestore';
+import { onSnapshot } from 'firebase/firestore';
 
 const DetailGrog: React.FC = () => {
   const navigation = useNavigation();
-  const [people, setPeople] = useState<string[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [people, setPeople] = useState<{ name: string }[]>([]); // Updated type to only store name
+  const [loading, setLoading] = useState<boolean>(true); // Loading state
+  const [error, setError] = useState<string | null>(null); // Error state
 
   useLayoutEffect(() => {
-    navigation.setOptions({ title: "People at Grog" });
+    navigation.setOptions({ title: 'People at The Grog Bar & Grill' });
   }, [navigation]);
 
   useEffect(() => {
-    const fetchAttendanceData = async () => {
-      try {
-        // Fetch attendance records
-        const response = await fetch(`http://10.0.2.2:8082/attendance/Grog`);
-        if (!response.ok) {
-          console.error('Failed to fetch attendance data:', response.status);
-          throw new Error('Failed to fetch attendance data');
-        }
-        
-        const data = await response.json();
-        console.log('Fetched attendance data:', data);
+    const fetchAttendanceData = () => {
+      const q = query(
+        collection(db, 'tracking'),
+        where('location.title', '==', "The Grog Bar & Grill"), // Adjusted query to check the Grog Bar's name
+        where('currentlyHere', '==', true)
+      );
 
-        if (Array.isArray(data) && data.length > 0) {
-          // Fetch each user's name based on userId in attendance records
-          const namesPromises = data.map(async (item) => {
-            try {
-              const userResponse = await fetch(`http://10.0.2.2:8082/user/${item.userId}`);
-              if (!userResponse.ok) {
-                console.error(`Failed to fetch user data for userId ${item.userId}`);
-                return null;
-              }
-              const userData = await userResponse.json();
-              return userData.name || 'Unknown';
-            } catch (error) {
-              console.error(`Error fetching user name for userId ${item.userId}:`, error);
-              return null;
-            }
-          });
+      const unsubscribe = onSnapshot(q, async (querySnapshot) => {
+        try {
+          const attendeeIds = querySnapshot.docs.map((doc) => doc.data().userId);
 
-          const names = await Promise.all(namesPromises);
-          setPeople(names.filter(name => name)); // Filter out null values
-        } else {
-          console.log('No users currently at Grog.');
+          const enrichedPeople = await Promise.all(
+            attendeeIds.map(async (userId) => {
+              const userDocRef = doc(db, "users", userId);
+              const userDoc = await getDoc(userDocRef);
+
+              return userDoc.exists() ? { name: userDoc.data().name } : { name: "Unknown User" };
+            })
+          );
+
+          setPeople(enrichedPeople);
+          setLoading(false); // Data fetched successfully
+        } catch (err) {
+          setError('Failed to load data');
+          setLoading(false); // Stop loading on error
         }
-      } catch (error) {
-        console.error('Error in fetchAttendanceData:', error);
-      } finally {
-        setLoading(false);
-      }
+      });
+
+      return () => unsubscribe();  // Cleanup on component unmount
     };
 
     fetchAttendanceData();
@@ -59,9 +53,16 @@ const DetailGrog: React.FC = () => {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0000ff" />
-        <ThemedText style={styles.loadingText}>Loading...</ThemedText>
+      <View style={styles.container}>
+        <ThemedText style={styles.nameText}>Loading...</ThemedText>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <ThemedText style={styles.nameText}>{error}</ThemedText>
       </View>
     );
   }
@@ -70,9 +71,9 @@ const DetailGrog: React.FC = () => {
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.peopleListContainer}>
         {people.length > 0 ? (
-          people.map((name, index) => (
+          people.map(({ name }, index) => (
             <ThemedText key={index} style={styles.nameText}>
-              {name}
+              {name} {/* Only show the name */}
             </ThemedText>
           ))
         ) : (
@@ -100,21 +101,6 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     color: '#333',
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'white',
-  },
-  loadingText: {
-    fontSize: 20,
-    textAlign: 'center',
-    marginTop: 20,
-  },
 });
 
 export default DetailGrog;
-
-
-
-
