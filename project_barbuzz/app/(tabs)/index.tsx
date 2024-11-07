@@ -10,11 +10,13 @@ import { ScrollView } from 'react-native';
 // index.tsx
 import { auth, db } from '../config/firebaseConfig.js';
 //import { auth } from '../../../barbuzz-backend/firebaseConfig.js'; // Ensure the path is correct
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
 
 
 //import { auth } from 'firebase/auth';
 //import { auth } from '@/barbuzz-backend/firebaseConfig.js'; 
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+//import { createUserWithEmailAndPassword } from 'firebase/auth';
 
 
 let showLocationsOfInterest = [
@@ -77,6 +79,9 @@ export default function HomeScreen() {
   const mapRef = useRef<MapView | null>(null);
   const [isSignUp, setIsSignUp] = useState(true);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
+  const [userName, setUserName] = useState('');
+  const [userLocations, setUserLocations] = useState([]);
+
 
   const onRegionChange = (region: Region) => {
     console.log(region);
@@ -143,6 +148,41 @@ export default function HomeScreen() {
     checkUserSignUpStatus();
   }, []);
 
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        // Retrieve userId from AsyncStorage
+        const userId = await AsyncStorage.getItem('userId');
+        if (!userId) {
+          console.error("User ID not found");
+          return;
+        }
+  
+        // Query Firestore to get the user's document
+        const userRef = collection(db, 'users');
+        const q = query(userRef, where('userId', '==', userId));
+        const querySnapshot = await getDocs(q);
+  
+        if (!querySnapshot.empty) {
+          const userDoc = querySnapshot.docs[0];
+          const userData = userDoc.data();
+          setUserName(userData.name); // Assuming 'name' field exists in the document
+          // Fetch and set locations if available
+          if (userData.locations) {
+            setUserLocations(userData.locations);
+          }
+        } else {
+          console.error("User document not found in Firestore");
+        }
+      } catch (error) {
+        console.error("Error fetching user data from Firestore:", error);
+      }
+    };
+  
+    fetchUserData();
+  }, []);
+  
+
   const handleDobChange = (input: string) => {
     const cleaned = input.replace(/[^\d]/g, '');
     let formatted = cleaned;
@@ -199,44 +239,47 @@ const handleVerifyOtp = async () => {
 
 const handleSignIn = async () => {
   try {
-    // Step 1: Authenticate with your server
-    const response = await axios.post('http://localhost:8082/sign-in', { email, password });
-    if (response.status === 200) {
-      Alert.alert('Success', 'Welcome back to BarBuzz!');
+    const auth = getAuth();
+    const response = await signInWithEmailAndPassword(auth, email, password);
+    const user = response.user;
 
-      // Step 2: Retrieve the Firestore document ID (userId) for the authenticated user
-      const userRef = collection(db, 'users');  // Access 'users' collection
-      const q = query(userRef, where('email', '==', email));  // Create query to find user by email
-      const snapshot = await getDocs(q);  // Execute the query
+    if (user) {
+      // Store user ID in AsyncStorage
+      await AsyncStorage.setItem('userId', user.uid);
 
-
+      // Fetch user profile data from Firestore
+      const userRef = query(collection(db, 'users'), where('userId', '==', user.uid));
+      const snapshot = await getDocs(userRef);
       if (!snapshot.empty) {
-        const userDoc = snapshot.docs[0];  // Get the first matching document
-        const userId = userDoc.id;  // Firestore's unique document ID for the user
-
-        // Step 3: Store the userId in AsyncStorage for later use
-        await AsyncStorage.setItem('userId', userId);
-
-        setModalVisible(false);  // Close modal on successful sign-in
+        const userData = snapshot.docs[0].data();
+        console.log('User data from Firestore:', userData);
+        // Optionally store additional profile data in AsyncStorage if needed
+        // await AsyncStorage.setItem('userProfile', JSON.stringify(userData));
       } else {
-        console.error('No matching user found in Firestore');
-        Alert.alert('Error', 'User not found in database.');
+        console.error('User profile not found in Firestore.');
       }
+
+      Alert.alert('Success', 'Welcome back to BarBuzz!');
+      setModalVisible(false); // Close the modal after successful sign-in
     }
   } catch (error) {
     console.error('Error signing in:', error);
     Alert.alert('Error', 'Invalid credentials. Please try again.');
   }
+  console.log('User ID stored:', await AsyncStorage.getItem('userId'));
 };
+
 
 const handleSignUp = async () => {
   console.log("Button Clicked!");
 
+  // Villanova email check
   if (!email.endsWith('@villanova.edu')) {
     Alert.alert('Invalid Email', 'Please use a Villanova email address.');
     return;
   }
 
+  // Age restriction check
   const birthYear = new Date(dob).getFullYear();
   const currentYear = new Date().getFullYear();
   if (currentYear - birthYear < 21) {
@@ -244,30 +287,39 @@ const handleSignUp = async () => {
     return;
   }
 
+  // Format date of birth
   const [month, day, year] = dob.split('/');
   const formattedDob = `${year}-${month}-${day}`;
+
+  const auth = getAuth();
+  const firestore = getFirestore();
 
   try {
     console.log("Sending request to Firestore...");
 
-    // Step 1: Add a new document to Firestore 'users' collection
-    const userRef = await createUserWithEmailAndPassword(auth, email, password);
-    await addDoc(collection(db, 'users'), {
+    // Create user and get user ID
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+
+    // Step 1: Save the user data under their UID in Firestore
+    await setDoc(doc(firestore, 'users', user.uid), {
       name,
       email,
       dob: formattedDob,
-      userId: userRef.user.uid
     });
 
-    await AsyncStorage.setItem('userId', userRef.user.uid); // Store userId in AsyncStorage
-      setModalVisible(false); // Close the modal after successful sign-up
-      Alert.alert('Success', `Welcome to BarBuzz, ${name}!`);
-    } catch (error) {
-      const errorMessage = (error instanceof Error) ? error.message : 'An unknown error occurred';
-      console.error('Error signing up:', errorMessage);
-      Alert.alert('Error', errorMessage);
-    }
-  };
+    // Step 2: Store userId locally in AsyncStorage for future reference
+    await AsyncStorage.setItem('userId', user.uid); 
+
+    // Close modal and show success message
+    setModalVisible(false);
+    Alert.alert('Success', `Welcome to BarBuzz, ${name}!`);
+  } catch (error) {
+    const errorMessage = (error instanceof Error) ? error.message : 'An unknown error occurred';
+    console.error('Error signing up:', errorMessage);
+    Alert.alert('Error', errorMessage);
+  }
+};
 /*
     // Step 2: Retrieve and store the Firestore document ID (userId) for the newly registered user
     const userId = userRef.id;  // Firestore's unique document ID
