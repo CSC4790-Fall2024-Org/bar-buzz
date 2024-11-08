@@ -1,14 +1,15 @@
 import React, { useEffect, useState, useLayoutEffect } from 'react';
-import { StyleSheet, View, ScrollView } from 'react-native';
+import { StyleSheet, View, ScrollView, SafeAreaView } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { useNavigation } from 'expo-router';
-import { db } from '../firebase';  // Ensure correct path
+import { db } from '../firebase';
 import { collection, query, where, doc, getDoc } from 'firebase/firestore';
 import { onSnapshot } from 'firebase/firestore';
 
 const DetailFlips: React.FC = () => {
   const navigation = useNavigation();
-  const [people, setPeople] = useState<{ name: string }[]>([]);
+  const [currentPeople, setCurrentPeople] = useState<{ name: string }[]>([]);
+  const [planningPeople, setPlanningPeople] = useState<{ name: string }[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,19 +19,26 @@ const DetailFlips: React.FC = () => {
 
   useEffect(() => {
     const fetchAttendanceData = () => {
-      const q = query(
+      const qCurrent = query(
         collection(db, 'tracking'),
-        where('location.title', '==', "Flip & Bailey's"), // Check if the title is matching in Firestore
+        where('location.title', '==', "Flip & Bailey's"), 
         where('currentlyHere', '==', true)
       );
+      const qPlanning = query(
+        collection(db, 'tracking'),
+        where('location.title', '==', "Flip & Bailey's"), 
+        where('currentlyHere', '==', false) 
+      );
 
-      const unsubscribe = onSnapshot(q, async (querySnapshot) => {
+      let currentDataFetched = false;
+      let planningDataFetched = false;
+
+      const unsubscribeCurrent = onSnapshot(qCurrent, async (querySnapshot) => {
         try {
-          console.log("Querying for Flip & Bailey's attendance data...");
-          const attendeeIds = querySnapshot.docs.map((doc) => doc.data().userId);
+          const attendeeIdsCurrent = querySnapshot.docs.map((doc) => doc.data().userId);
 
-          const enrichedPeople = await Promise.all(
-            attendeeIds.map(async (userId) => {
+          const enrichedCurrentPeople = await Promise.all(
+            attendeeIdsCurrent.map(async (userId) => {
               const userDocRef = doc(db, "users", userId);
               const userDoc = await getDoc(userDocRef);
 
@@ -38,17 +46,39 @@ const DetailFlips: React.FC = () => {
             })
           );
 
-          console.log("Enriched people:", enrichedPeople); // Log the enriched data
-          setPeople(enrichedPeople);
-          setLoading(false);
+          setCurrentPeople(enrichedCurrentPeople);
+          currentDataFetched = true;
+          if (currentDataFetched && planningDataFetched) setLoading(false);  
         } catch (err) {
-          console.error("Error fetching data:", err); // Log error to the console
-          setError('Failed to load data');
-          setLoading(false);
+          setError('Failed to load current attendance data');
         }
       });
 
-      return () => unsubscribe();  // Cleanup on component unmount
+      const unsubscribePlanning = onSnapshot(qPlanning, async (querySnapshot) => {
+        try {
+          const attendeeIdsPlanning = querySnapshot.docs.map((doc) => doc.data().userId);
+
+          const enrichedPlanningPeople = await Promise.all(
+            attendeeIdsPlanning.map(async (userId) => {
+              const userDocRef = doc(db, "users", userId);
+              const userDoc = await getDoc(userDocRef);
+
+              return userDoc.exists() ? { name: userDoc.data().name } : { name: "Unknown User" };
+            })
+          );
+
+          setPlanningPeople(enrichedPlanningPeople);
+          planningDataFetched = true;
+          if (currentDataFetched && planningDataFetched) setLoading(false);  
+        } catch (err) {
+          setError('Failed to load planning attendance data');
+        }
+      });
+
+      return () => {
+        unsubscribeCurrent();
+        unsubscribePlanning();
+      };
     };
 
     fetchAttendanceData();
@@ -56,54 +86,113 @@ const DetailFlips: React.FC = () => {
 
   if (loading) {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.fullScreenContainer}>
         <ThemedText style={styles.nameText}>Loading...</ThemedText>
-      </View>
+      </SafeAreaView>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.fullScreenContainer}>
         <ThemedText style={styles.nameText}>{error}</ThemedText>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.fullScreenContainer}>
       <ScrollView contentContainerStyle={styles.peopleListContainer}>
-        {people.length > 0 ? (
-          people.map(({ name }, index) => (
-            <ThemedText key={index} style={styles.nameText}>
-              {name}
-            </ThemedText>
-          ))
-        ) : (
-          <ThemedText style={styles.nameText}>No one here yet!</ThemedText>
-        )}
+        <View style={styles.wrapper}>
+          <View style={styles.column}>
+            <ThemedText style={styles.columnTitle}>Currently Here</ThemedText>
+            {currentPeople.length > 0 ? (
+              currentPeople.map(({ name }, index) => (
+                <View
+                  key={index}
+                  style={[
+                    styles.row,
+                    { backgroundColor: index % 2 === 0 ? '#ffecb3' : '#fff8e1' },
+                  ]}
+                >
+                  <ThemedText style={styles.nameText}>{name}</ThemedText>
+                </View>
+              ))
+            ) : (
+              <View style={styles.row}>
+                <ThemedText style={styles.nameText}>No one here yet!</ThemedText>
+              </View>
+            )}
+          </View>
+
+          <View style={styles.verticalDivider} />
+
+          <View style={styles.column}>
+            <ThemedText style={styles.columnTitle}>Planning to Attend</ThemedText>
+            {planningPeople.length > 0 ? (
+              planningPeople.map(({ name }, index) => (
+                <View
+                  key={index}
+                  style={[
+                    styles.row,
+                    { backgroundColor: index % 2 === 0 ? '#ffecb3' : '#fff8e1' },
+                  ]}
+                >
+                  <ThemedText style={styles.nameText}>{name}</ThemedText>
+                </View>
+              ))
+            ) : (
+              <View style={styles.row}>
+                <ThemedText style={styles.nameText}>No one planning to attend yet!</ThemedText>
+              </View>
+            )}
+          </View>
+        </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  fullScreenContainer: {
     flex: 1,
     backgroundColor: 'white',
-    paddingHorizontal: 20,
-    paddingTop: 30,
   },
   peopleListContainer: {
-    backgroundColor: '#f8f9fa',
-    padding: 15,
-    borderRadius: 10,
+    flexGrow: 1,
+    paddingHorizontal: 10,
+    backgroundColor: '#fffbe0', // Light yellow background for table area
+  },
+  wrapper: {
+    flexDirection: 'row',
+    flex: 1,
+    alignItems: 'flex-start', // Aligns content to the top
+    justifyContent: 'center', // Centers the columns and divider in the screen
+  },
+  column: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  columnTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    paddingVertical: 20,
+  },
+  row: {
+    paddingVertical: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%', // Makes rows full width within column
   },
   nameText: {
-    fontSize: 20,
-    marginVertical: 10,
+    fontSize: 16,
     color: '#333',
   },
+  verticalDivider: {
+    width: 1,
+    backgroundColor: 'black', // Changed to black
+    height: '100%', // Extends divider vertically through header and rows
+  },
 });
-
 export default DetailFlips;
