@@ -12,6 +12,8 @@ import { auth, db } from '../config/firebaseConfig.js';
 //import { auth } from '../../../barbuzz-backend/firebaseConfig.js'; // Ensure the path is correct
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
+import { LogBox } from 'react-native';
+LogBox.ignoreLogs(['@firebase/auth']);
 
 
 //import { auth } from 'firebase/auth';
@@ -172,7 +174,7 @@ export default function HomeScreen() {
             setUserLocations(userData.locations);
           }
         } else {
-          console.error("User document not found in Firestore");
+          //console.error("User document not found in Firestore");
         }
       } catch (error) {
         console.error("Error fetching user data from Firestore:", error);
@@ -256,7 +258,7 @@ const handleSignIn = async () => {
         // Optionally store additional profile data in AsyncStorage if needed
         // await AsyncStorage.setItem('userProfile', JSON.stringify(userData));
       } else {
-        console.error('User profile not found in Firestore.');
+        //console.error('User profile not found in Firestore.');
       }
 
       Alert.alert('Success', 'Welcome back to BarBuzz!');
