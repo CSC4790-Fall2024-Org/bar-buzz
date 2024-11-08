@@ -266,7 +266,7 @@ const handleSignIn = async () => {
     }
   } catch (error) {
     console.error('Error signing in:', error);
-    Alert.alert('Error', 'Invalid credentials. Please try again.');
+    //Alert.alert('Error', 'Invalid credentials. Please try again.');
   }
   console.log('User ID stored:', await AsyncStorage.getItem('userId'));
 };
