@@ -103,50 +103,34 @@ const DetailFlips: React.FC = () => {
   return (
     <SafeAreaView style={styles.fullScreenContainer}>
       <ScrollView contentContainerStyle={styles.peopleListContainer}>
-        <View style={styles.wrapper}>
-          <View style={styles.column}>
-            <ThemedText style={styles.columnTitle}>Currently Here</ThemedText>
-            {currentPeople.length > 0 ? (
-              currentPeople.map(({ name }, index) => (
-                <View
-                  key={index}
-                  style={[
-                    styles.row,
-                    { backgroundColor: index % 2 === 0 ? '#ffecb3' : '#fff8e1' },
-                  ]}
-                >
-                  <ThemedText style={styles.nameText}>{name}</ThemedText>
-                </View>
-              ))
-            ) : (
-              <View style={styles.row}>
-                <ThemedText style={styles.nameText}>No one here yet!</ThemedText>
+        <View style={styles.sectionContainer}>
+          <ThemedText style={styles.sectionTitle}>Currently Here</ThemedText>
+          {currentPeople.length > 0 ? (
+            currentPeople.map(({ name }, index) => (
+              <View key={index} style={styles.row}>
+                <ThemedText style={styles.nameText}>{name}</ThemedText>
               </View>
-            )}
-          </View>
+            ))
+          ) : (
+            <View style={styles.row}>
+              <ThemedText style={styles.nameText}>No one here yet!</ThemedText>
+            </View>
+          )}
+        </View>
 
-          <View style={styles.verticalDivider} />
-
-          <View style={styles.column}>
-            <ThemedText style={styles.columnTitle}>Planning to Attend</ThemedText>
-            {planningPeople.length > 0 ? (
-              planningPeople.map(({ name }, index) => (
-                <View
-                  key={index}
-                  style={[
-                    styles.row,
-                    { backgroundColor: index % 2 === 0 ? '#ffecb3' : '#fff8e1' },
-                  ]}
-                >
-                  <ThemedText style={styles.nameText}>{name}</ThemedText>
-                </View>
-              ))
-            ) : (
-              <View style={styles.row}>
-                <ThemedText style={styles.nameText}>No one planning to attend yet!</ThemedText>
+        <View style={styles.sectionContainer}>
+          <ThemedText style={styles.sectionTitle}>Planning to Attend</ThemedText>
+          {planningPeople.length > 0 ? (
+            planningPeople.map(({ name }, index) => (
+              <View key={index} style={styles.row}>
+                <ThemedText style={styles.nameText}>{name}</ThemedText>
               </View>
-            )}
-          </View>
+            ))
+          ) : (
+            <View style={styles.row}>
+              <ThemedText style={styles.nameText}>No one planning to attend yet!</ThemedText>
+            </View>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -159,40 +143,36 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   peopleListContainer: {
-    flexGrow: 1,
-    paddingHorizontal: 10,
-    backgroundColor: '#fffbe0', // Light yellow background for table area
+    padding: 15,
+    backgroundColor: '#f7f7f7', // Matches DetailScreen light gray background
   },
-  wrapper: {
-    flexDirection: 'row',
-    flex: 1,
-    alignItems: 'flex-start', // Aligns content to the top
-    justifyContent: 'center', // Centers the columns and divider in the screen
+  sectionContainer: {
+    marginBottom: 25,
   },
-  column: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  columnTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    paddingVertical: 20,
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#444', // Matches DetailScreen section title color
+    paddingVertical: 10,
+    letterSpacing: 0.5,
   },
   row: {
-    paddingVertical: 15,
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: '100%', // Makes rows full width within column
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    backgroundColor: '#ffffff', // Matches DetailScreen white background for rows
+    marginBottom: 8,
+    borderRadius: 8,
+    shadowColor: '#000', // Subtle shadow for depth, similar to DetailScreen
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 1,
   },
   nameText: {
     fontSize: 16,
-    color: '#333',
-  },
-  verticalDivider: {
-    width: 1,
-    backgroundColor: 'black', // Changed to black
-    height: '100%', // Extends divider vertically through header and rows
+    color: '#333', // Matches DetailScreen text color
+    textAlign: 'left',
   },
 });
+
 export default DetailFlips;

@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useState, useEffect } from 'react';
+import React, { useLayoutEffect, useState, useEffect, useRef } from 'react';
 import { StyleSheet, TouchableOpacity, Image, View } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -24,54 +24,46 @@ const TabTwoScreen: React.FC = () => {
   const router = useRouter();
   const navigation = useNavigation();
   const [peopleCount, setPeopleCount] = useState<{ [key: string]: { planning: number; currentlyHere: number; total: number } }>({});
+  const countsRef = useRef<{ [key: string]: { planning: number; currentlyHere: number } }>({});
 
   useLayoutEffect(() => {
     navigation.setOptions({ title: 'Bars' });
   }, [navigation]);
 
-  // Fetch the people counts from Firebase when the component mounts
   useEffect(() => {
     const fetchPeopleCount = () => {
       const trackingCollection = collection(db, 'tracking');
       
       DATA.forEach((item) => {
-        // Query to get people planning to attend the bar
+        const barName = item.name;
+        countsRef.current[barName] = { planning: 0, currentlyHere: 0 };
+
+        // Query for people planning to attend
         const planningQuery = query(
           trackingCollection,
-          where("location.title", "==", item.name),
+          where("location.title", "==", barName),
           where("planningToAttend", "==", true)
         );
 
-        // Query to get people currently at the bar
+        // Query for people currently here
         const currentlyHereQuery = query(
           trackingCollection,
-          where("location.title", "==", item.name),
+          where("location.title", "==", barName),
           where("currentlyHere", "==", true)
         );
 
-        // Subscribe to real-time updates for both queries
+        // Subscribe to real-time updates for the planning query
         const unsubscribePlanning = onSnapshot(planningQuery, (snapshot) => {
           const planningCount = snapshot.size;
-          setPeopleCount((prev) => ({
-            ...prev,
-            [item.name]: {
-              ...prev[item.name],
-              planning: planningCount,
-              total: (prev[item.name]?.currentlyHere || 0) + planningCount,  // Update total count
-            },
-          }));
+          countsRef.current[barName].planning = planningCount;
+          updatePeopleCount(barName);
         });
 
+        // Subscribe to real-time updates for the currentlyHere query
         const unsubscribeCurrentlyHere = onSnapshot(currentlyHereQuery, (snapshot) => {
           const currentlyHereCount = snapshot.size;
-          setPeopleCount((prev) => ({
-            ...prev,
-            [item.name]: {
-              ...prev[item.name],
-              currentlyHere: currentlyHereCount,
-              total: (prev[item.name]?.planning || 0) + currentlyHereCount,  // Update total count
-            },
-          }));
+          countsRef.current[barName].currentlyHere = currentlyHereCount;
+          updatePeopleCount(barName);
         });
 
         // Cleanup the subscriptions when the component unmounts
@@ -80,6 +72,18 @@ const TabTwoScreen: React.FC = () => {
           unsubscribeCurrentlyHere();
         };
       });
+    };
+
+    const updatePeopleCount = (barName: string) => {
+      const { planning, currentlyHere } = countsRef.current[barName];
+      setPeopleCount((prev) => ({
+        ...prev,
+        [barName]: {
+          planning,
+          currentlyHere,
+          total: planning + currentlyHere,  // Calculate total from both counts
+        },
+      }));
     };
 
     fetchPeopleCount();

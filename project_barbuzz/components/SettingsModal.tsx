@@ -1,6 +1,7 @@
-// SettingsModal.tsx
 import React from 'react';
-import { Modal, View, Text, Button, StyleSheet } from 'react-native';
+import { Modal, View, Text, Button, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import { getAuth, signOut } from 'firebase/auth';
+import { useRouter } from 'expo-router';
 
 interface SettingsModalProps {
   visible: boolean;
@@ -8,6 +9,22 @@ interface SettingsModalProps {
 }
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }) => {
+  const router = useRouter(); // Initialize router
+
+  const handleLogout = async () => {
+    const auth = getAuth();
+    try {
+      await signOut(auth);
+      Alert.alert("Logged Out", "You have been successfully logged out.");
+      onClose(); // Close the modal
+      router.replace("/"); // Navigate to the main entry page (index.tsx)
+    } catch (error) {
+      console.error("Logout error: ", error);
+      Alert.alert("Logout Error", "An error occurred during logout.");
+    }
+  };
+  
+
   return (
     <Modal
       transparent={true}
@@ -17,8 +34,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }) => {
     >
       <View style={styles.modalBackground}>
         <View style={styles.modalContainer}>
-          <Text style={styles.modalTitle}>Hi Navi and Ellie this will be our settings</Text>
-          {/* Add your settings options here */}
+          <Text style={styles.modalTitle}>Settings - log out not functioning </Text>
+          {/* Settings options can be added here */}
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Text style={styles.logoutButtonText}>Log Out</Text>
+          </TouchableOpacity>
           <Button title="Close" onPress={onClose} />
         </View>
       </View>
@@ -43,6 +63,20 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     marginBottom: 20,
+    textAlign: 'center',
+  },
+  logoutButton: {
+    backgroundColor: 'green', // Green color for logout button
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    marginVertical: 10,
+  },
+  logoutButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
 
