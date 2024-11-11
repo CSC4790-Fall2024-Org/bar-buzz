@@ -115,16 +115,37 @@ const TabTwoScreen: React.FC = () => {
     });
   };
 
-  const renderItem = ({ item }: { item: Item }) => (
-    <TouchableOpacity onPress={() => handlePress(item)} style={styles.itemContainer}>
-      <View style={styles.itemContent}>
-        <ThemedText style={styles.item}>{item.name}</ThemedText>
-        <ThemedText style={styles.peopleCount}>
-          {peopleCount[item.name] ? `${peopleCount[item.name].total} people` : 'Loading...'}
-        </ThemedText>
-      </View>
-    </TouchableOpacity>
-  );
+  const renderItem = ({ item }: { item: Item }) => {
+    // Set background color based on bar name
+    const backgroundColor = (() => {
+      switch (item.name) {
+        case "Kelly's Taproom":
+          return '#00BFFF'; // Blue
+        case "The Grog Grill":
+          return '#008000'; // Purple
+        case "McSorley's":
+          return '#FF0000'; // Red
+        case "Flip & Bailey's":
+          return '#ffa500'; // Orange
+        default:
+          return 'white';
+      }
+    })();
+
+    return (
+      <TouchableOpacity
+        onPress={() => handlePress(item)}
+        style={[styles.itemContainer, { backgroundColor }]}
+      >
+        <View style={styles.itemContent}>
+          <ThemedText style={styles.item}>{item.name}</ThemedText>
+          <ThemedText style={styles.peopleCount}>
+            {peopleCount[item.name] ? `${peopleCount[item.name].total} people` : 'Loading...'}
+          </ThemedText>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -146,11 +167,8 @@ const TabTwoScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   itemContainer: {
-    backgroundColor: 'white',
     marginTop: 20,
     padding: 20,
-    borderWidth: 1,
-    borderColor: 'black',
     borderRadius: 8,
   },
   itemContent: {
@@ -160,12 +178,12 @@ const styles = StyleSheet.create({
   },
   item: {
     fontSize: 22,
-    backgroundColor: 'white',
+    color: 'white',
     padding: 2,
   },
   peopleCount: {
     fontSize: 18,
-    color: 'gray',
+    color: 'white',
   },
   headerContainer: {
     alignItems: 'center',
