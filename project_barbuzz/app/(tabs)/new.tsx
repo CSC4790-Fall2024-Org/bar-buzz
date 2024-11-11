@@ -118,6 +118,7 @@ export default function HomeScreen() {
   }, []);
 
   const totalVisits = visits.reduce((acc, place) => acc + place.visits, 0);
+  const mostVisitedBar = visits.reduce((max, place) => place.visits > max.visits ? place : max, visits[0]).name;
 
   if (loading) {
     return <ActivityIndicator size="large" color="#0000ff" />;
@@ -155,7 +156,9 @@ export default function HomeScreen() {
         </ThemedView>
 
         <View style={styles.superstarContainer}>
-          <ThemedText style={styles.superstarText}>You are a Grog Superstar!</ThemedText>
+          <ThemedText style={styles.superstarText}>
+            {totalVisits === 0 ? "Buzz in and see your stats" : `You are a ${mostVisitedBar} Superstar!`}
+          </ThemedText>
         </View>
 
         <View style={styles.visitsContainer}>
