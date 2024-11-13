@@ -8,6 +8,8 @@ import { useRouter, useNavigation } from 'expo-router';
 import { db } from '../../firebase'; // Adjust the path if necessary
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 
+// I hope this works 
+
 interface Item {
   name: string;
   key: string;
