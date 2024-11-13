@@ -498,8 +498,6 @@ const handleSignUp = async () => {
   </View>
 </Modal>
 
-
-
 {/* Blank Box Modal when a pin is clicked */}
 <Modal
   animationType="slide"
