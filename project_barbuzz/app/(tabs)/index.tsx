@@ -10,7 +10,7 @@ import { ScrollView } from 'react-native';
 // index.tsx
 import { auth, db } from '../config/firebaseConfig.js';
 //import { auth } from '../../../barbuzz-backend/firebaseConfig.js'; // Ensure the path is correct
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, createUserWithEmailAndPassword, sendEmailVerification, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
 import { LogBox } from 'react-native';
 LogBox.ignoreLogs(['@firebase/auth']);
@@ -67,8 +67,7 @@ type Location = {
 
 export default function HomeScreen() {
   const [modalVisible, setModalVisible] = useState(false);
-  const [otpModalVisible, setOtpModalVisible] = useState(false); // For OTP modal
-  const [otp, setOtp] = useState(''); // Store OTP
+  //const [name, setName] = useState('');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [dob, setDob] = useState('');
@@ -77,13 +76,11 @@ export default function HomeScreen() {
   const [currentlyHere, setCurrentlyHere] = useState(false); // State for "Are you currently here?"
   const [planningToAttend, setPlanningToAttend] = useState(false);
   const [showSplash, setShowSplash] = useState(true); // Splash screen state
-  const [isOtpSent, setIsOtpSent] = useState(false); // Track if OTP has been sent
   const mapRef = useRef<MapView | null>(null);
   const [isSignUp, setIsSignUp] = useState(true);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [userName, setUserName] = useState('');
   const [userLocations, setUserLocations] = useState([]);
-
 
   const onRegionChange = (region: Region) => {
     console.log(region);
@@ -197,83 +194,92 @@ export default function HomeScreen() {
     setDob(formatted);
   };
 
-/*
- // Step 1: Request OTP from backend
-const requestOtp = async () => {
-  if (!email.endsWith('@villanova.edu')) {
-    Alert.alert('Invalid Email', 'Please use a Villanova email address.');
-    return;
-  }
 
-  try {
-    const response = await axios.post('http://localhost:8082/send-otp', {
-      email: email
-    });
-    if (response.status === 200) {
-      Alert.alert('Success', 'OTP sent to your email.');
-      setOtpModalVisible(true); // Show OTP input
-    } else {
-      Alert.alert('Error', 'Failed to send OTP.');
-    }
-  } catch (error) {
-    console.error('Error sending OTP:', error);
-    Alert.alert('Network Error', 'Please check your network connection.');
-  }
-};
-
-// Step 2: Verify OTP
-const handleVerifyOtp = async () => {
-  try {
-    const response = await axios.post('http://localhost:8082/verify-otp', { email, otp });
-    if (response.status === 200) {
-      Alert.alert('OTP Verified', 'OTP successfully verified. You may now proceed.');
-      setOtpModalVisible(false); // Close OTP modal after verification
-      handleSignUp(); // Proceed to sign-up after OTP verification
-    } else {
-      Alert.alert('Error', 'Invalid OTP. Please try again.');
-    }
-  } catch (error) {
-    console.error('Error verifying OTP:', error);
-    Alert.alert('Error', 'Invalid OTP. Please try again.');
-  }
-};
-*/
-
-const handleSignIn = async () => {
-  try {
-    const auth = getAuth();
-    const response = await signInWithEmailAndPassword(auth, email, password);
-    const user = response.user;
-
-    if (user) {
-      // Store user ID in AsyncStorage
-      await AsyncStorage.setItem('userId', user.uid);
-
-      // Fetch user profile data from Firestore
-      const userRef = query(collection(db, 'users'), where('userId', '==', user.uid));
-      const snapshot = await getDocs(userRef);
-      if (!snapshot.empty) {
-        const userData = snapshot.docs[0].data();
-        console.log('User data from Firestore:', userData);
-        // Optionally store additional profile data in AsyncStorage if needed
-        // await AsyncStorage.setItem('userProfile', JSON.stringify(userData));
+  const handleSignIn = async () => {
+    try {
+      const auth = getAuth();
+      const response = await signInWithEmailAndPassword(auth, email, password);
+      const user = auth.currentUser;
+  
+      // Check if the user is signed in and if their email is verified
+      if (user) {
+        if (!user.emailVerified) {
+          Alert.alert('Email Not Verified', 'Please verify your email to access the app.');
+          await signOut(auth); // Sign out if the email is not verified
+          return;
+        }
+  
+        // User is signed in and email is verified
+        await AsyncStorage.setItem('userId', user.uid);
+  
+        // Fetch user profile data from Firestore
+        const userRef = query(collection(db, 'users'), where('userId', '==', user.uid));
+        const snapshot = await getDocs(userRef);
+        if (!snapshot.empty) {
+          const userData = snapshot.docs[0].data();
+          setName(userData.name); // Set name in state
+          console.log('User data from Firestore:', userData);
+  
+          // Use userData.name directly in the Alert
+          Alert.alert('Success', `Welcome back to BarBuzz, ${userData.name}!`);
+        } else {
+          //console.error('User profile not found in Firestore.');
+        }
+  
+        setModalVisible(false); // Close the modal after successful sign-in
       } else {
-        //console.error('User profile not found in Firestore.');
+        console.error('No user is signed in.');
       }
-
-      Alert.alert('Success', 'Welcome back to BarBuzz!');
-      setModalVisible(false); // Close the modal after successful sign-in
+    } catch (error) {
+      console.error('Error signing in:', error);
+      Alert.alert('Error', 'Invalid credentials or an issue with sign-in. Please try again.');
     }
-  } catch (error) {
-    console.error('Error signing in:', error);
-    //Alert.alert('Error', 'Invalid credentials. Please try again.');
-  }
-  console.log('User ID stored:', await AsyncStorage.getItem('userId'));
-};
+    console.log('User ID stored:', await AsyncStorage.getItem('userId'));
+  };    
 
+const completeSignUp = async () => {
+  const auth = getAuth();
+  const firestore = getFirestore();
+  const [month, day, year] = dob.split('/');
+  const formattedDob = `${year}-${month}-${day}`;
+
+  try {
+      console.log("Completing Sign Up...");
+
+      // Create user and get user ID
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Save the user data under their UID in Firestore
+      await setDoc(doc(firestore, 'users', user.uid), {
+          name,
+          email,
+          dob: formattedDob,
+      });
+
+      setName(name);
+
+      // Store userId locally in AsyncStorage for future reference
+      await AsyncStorage.setItem('userId', user.uid); 
+
+      // Close modal and show success message
+      setModalVisible(true);
+      Alert.alert('Success', `Welcome to BarBuzz, ${name}!`);
+  } catch (error) {
+      const errorMessage = (error instanceof Error) ? error.message : 'An unknown error occurred';
+      console.error('Error completing sign-up:', errorMessage);
+      Alert.alert('Error', errorMessage);
+  }
+};
 
 const handleSignUp = async () => {
   console.log("Button Clicked!");
+
+  // Check that all required fields are filled out
+  if (!email || !name || !password || !dob) {
+    Alert.alert('Missing Information', 'Please complete all required fields.');
+    return;
+  }
 
   // Villanova email check
   if (!email.endsWith('@villanova.edu')) {
@@ -289,7 +295,7 @@ const handleSignUp = async () => {
     return;
   }
 
-  // Format date of birth
+  //Define formattedDob and name
   const [month, day, year] = dob.split('/');
   const formattedDob = `${year}-${month}-${day}`;
 
@@ -303,46 +309,43 @@ const handleSignUp = async () => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // Step 1: Save the user data under their UID in Firestore
+    // Step 1: Send email verification
+    await sendEmailVerification(user);
+    Alert.alert('Email Verification', 'A verification email has been sent. Please verify to complete registration.');
+
+    // Step 2: Save the user data with separate fields for first and last name
     await setDoc(doc(firestore, 'users', user.uid), {
-      name,
+      name, // Stored concatenated name
       email,
       dob: formattedDob,
     });
 
-    // Step 2: Store userId locally in AsyncStorage for future reference
-    await AsyncStorage.setItem('userId', user.uid); 
-
-    // Close modal and show success message
-    setModalVisible(false);
-    Alert.alert('Success', `Welcome to BarBuzz, ${name}!`);
+    // Step 3: Sign out user to prevent unverified access
+    await signOut(auth);
   } catch (error) {
-    const errorMessage = (error instanceof Error) ? error.message : 'An unknown error occurred';
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
     console.error('Error signing up:', errorMessage);
     Alert.alert('Error', errorMessage);
   }
 };
-/*
-    // Step 2: Retrieve and store the Firestore document ID (userId) for the newly registered user
-    const userId = userRef.id;  // Firestore's unique document ID
-    await AsyncStorage.setItem('userId', userId);  // Store userId in AsyncStorage
 
-    // Step 3: Save sign-up status to AsyncStorage
-    await AsyncStorage.setItem('isSignedUp', 'true');
+const checkVerificationStatus = async () => {
+  const auth = getAuth();
+  
+  // Ensure auth.currentUser is not null
+  if (auth.currentUser) {
+    await auth.currentUser.reload(); // Reload user to get the latest verification status
 
-    // Close the modal after successful sign-up
-    setModalVisible(false);
-
-    Alert.alert('Success', `Welcome to BarBuzz, ${name}!`);
-  } catch (error) {
-    console.error('Error signing up:', error);
-    Alert.alert('Error', 'An error occurred while signing up. Please try again later.');
+    if (auth.currentUser.emailVerified) {
+      Alert.alert('Verified', 'Your email is now verified. You can log in.');
+    } else {
+      Alert.alert('Not Verified', 'Please verify your email to proceed.');
+    }
+  } else {
+    console.error('No user is currently signed in.');
+    Alert.alert('Error', 'No user is currently signed in.');
   }
-
-  // requestOtp();  // Uncomment if OTP functionality is needed
 };
-
-  */
 
   return (
     <>
@@ -396,26 +399,6 @@ const handleSignUp = async () => {
         <StatusBar style="auto" />
       </View>
 
-      {/* OTP Modal 
-      <Modal animationType="slide" transparent={true} visible={otpModalVisible} onRequestClose={() => setOtpModalVisible(false)}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalView}>
-            <Text style={styles.welcomeText}>Enter OTP</Text>
-            <TextInput
-              value={otp}
-              onChangeText={setOtp}
-              style={styles.input}
-              keyboardType="number-pad"
-              placeholder="Enter OTP"
-            />
-            <TouchableOpacity style={styles.submitButton} onPress={handleVerifyOtp}>
-              <Text style={styles.submitButtonText}>Verify OTP</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-*/}
-
       {/* Sign-up or Sign-in modal */}
       <Modal
   animationType="slide"
@@ -427,6 +410,36 @@ const handleSignUp = async () => {
     <View style={styles.modalView}>
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
         <Text style={styles.welcomeText}>{isSignUp ? 'Sign Up for BarBuzz' : 'Sign In to BarBuzz'}</Text>
+
+{/* Additional fields for Sign Up only */}
+{isSignUp && (
+          <>
+            {/* Name Input */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Enter your Name*</Text>
+              <TextInput
+                value={name}
+                onChangeText={setName}
+                style={styles.input}
+                placeholder="Your name"
+              />
+            </View>
+
+            {/* Date of Birth Input */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Enter your Date of Birth*</Text>
+              <TextInput
+                value={dob}
+                onChangeText={handleDobChange}
+                style={styles.input}
+                placeholder="MM/DD/YYYY"
+                maxLength={10}
+                keyboardType="number-pad"
+              />
+              <Text style={styles.ageRestrictionText}>You must be 21+ to sign up</Text>
+            </View>
+          </>
+        )}
 
         {/* Email Input */}
         <View style={styles.inputContainer}>
@@ -452,36 +465,6 @@ const handleSignUp = async () => {
           />
         </View>
 
-        {/* Additional fields for Sign Up only */}
-        {isSignUp && (
-          <>
-            {/* Name Input */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Enter your name*</Text>
-              <TextInput
-                value={name}
-                onChangeText={setName}
-                style={styles.input}
-                placeholder="Your name"
-              />
-            </View>
-
-            {/* Date of Birth Input */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Enter your Date of Birth*</Text>
-              <TextInput
-                value={dob}
-                onChangeText={handleDobChange}
-                style={styles.input}
-                placeholder="MM/DD/YYYY"
-                maxLength={10}
-                keyboardType="number-pad"
-              />
-              <Text style={styles.ageRestrictionText}>You must be 21+ to sign up</Text>
-            </View>
-          </>
-        )}
-
         {/* Submit Button */}
         <TouchableOpacity style={styles.submitButton} onPress={isSignUp ? handleSignUp : handleSignIn}>
           <Text style={styles.submitButtonText}>{isSignUp ? "Let’s Go!" : "Sign In"}</Text>
@@ -497,7 +480,6 @@ const handleSignUp = async () => {
     </View>
   </View>
 </Modal>
-
 
 
 {/* Blank Box Modal when a pin is clicked */}

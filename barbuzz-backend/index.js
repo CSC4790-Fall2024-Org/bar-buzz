@@ -4,7 +4,6 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const admin = require('firebase-admin');  // Add Firebase Admin SDK
-const { sendOtp, verifyOtp } = require('./otp'); // Import the OTP functions from otp.js
 
 const app = express();
 const PORT = 8082;
@@ -42,28 +41,6 @@ const auth = getAuth(firebaseApp);
 
 const db = admin.firestore();  // Firestore reference
 
-// Sign up API with Firebase Firestore
-app.post('/signup', async (req, res) => {
-  const { name, email, dob, password } = req.body;
-
-  if (!name || !email || !dob || !password) {
-    return res.status(400).json({ error: 'All fields are required.' });
-  }
-
-  try {
-    const userRef = db.collection('users').doc();  // Create a new document in 'users' collection
-    await userRef.set({
-      name,
-      email,
-      dob,
-      password // Consider using Firebase Authentication for secure password management
-    });
-    return res.status(201).json({ message: 'User registered successfully!' });
-  } catch (error) {
-    console.error('Error adding document:', error);
-    return res.status(500).json({ error: 'An error occurred while signing up.' });
-  }
-});
 
 // Route to handle "Buzzed" submission with user UID
 app.post('/buzzed', async (req, res) => {
