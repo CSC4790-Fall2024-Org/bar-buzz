@@ -14,10 +14,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }) => {
   const handleLogout = async () => {
     const auth = getAuth();
     try {
-      await signOut(auth); // Sign the user out
+      await signOut(auth);
       Alert.alert("Logged Out", "You have been successfully logged out.");
       onClose(); // Close the modal
-      router.push("/"); // Navigate back to the root page (sign-in/signup)
+      router.replace("/"); // Navigate to the main entry page (index.tsx)
     } catch (error) {
       console.error("Logout error: ", error);
       Alert.alert("Logout Error", "An error occurred during logout.");
@@ -34,7 +34,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }) => {
     >
       <View style={styles.modalBackground}>
         <View style={styles.modalContainer}>
-          <Text style={styles.modalTitle}>Settings</Text>
+          <Text style={styles.modalTitle}>Settings - log out not functioning </Text>
+          {/* Settings options can be added here */}
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Text style={styles.logoutButtonText}>Log Out</Text>
           </TouchableOpacity>
