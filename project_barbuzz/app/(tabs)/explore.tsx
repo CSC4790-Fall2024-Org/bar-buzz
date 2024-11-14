@@ -8,8 +8,6 @@ import { useRouter, useNavigation } from 'expo-router';
 import { db } from '../../firebase'; // Adjust the path if necessary
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 
-// I hope this works 
-
 interface Item {
   name: string;
   key: string;
@@ -101,7 +99,7 @@ const TabTwoScreen: React.FC = () => {
         routePath = '/detailGrog';
         break;
       case "McSorley's":
-        routePath = '/detailMcSoreleys';
+        routePath = '/detailMcSorleys';
         break;
       case "Flip & Bailey's":
         routePath = '/detailFlips';
@@ -112,7 +110,7 @@ const TabTwoScreen: React.FC = () => {
     }
 
     router.push({
-      pathname: routePath as "/detail" | "/detailGrog" | "/detailMcSoreleys" | "/detailFlips",
+      pathname: routePath as "/detail" | "/detailGrog" | "/detailMcSorleys" | "/detailFlips",
       params: { barName: item.name },
     });
   };

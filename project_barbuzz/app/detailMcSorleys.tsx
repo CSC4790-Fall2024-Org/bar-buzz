@@ -5,7 +5,7 @@ import { useNavigation, useLocalSearchParams } from 'expo-router';
 import { db } from '../firebase';
 import { collection, query, where, doc, getDoc, getDocs } from 'firebase/firestore';
 
-const DetailMcSoreleys: React.FC = () => {
+const DetailMcSorleys: React.FC = () => {
   const { barName } = useLocalSearchParams(); // Get dynamic bar name
   const navigation = useNavigation();
   const [currentPeople, setCurrentPeople] = useState<{ name: string }[]>([]);
@@ -165,4 +165,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default DetailMcSoreleys;
+export default DetailMcSorleys;
