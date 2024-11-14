@@ -1,15 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Image, ScrollView, Dimensions, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, Image, ScrollView, Dimensions, ActivityIndicator, Button, TouchableOpacity } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import * as Progress from 'react-native-progress';
 import { getAuth } from 'firebase/auth';
 import { getFirestore, collection, query, where, onSnapshot, doc, getDoc } from 'firebase/firestore';
+import { getStorage, ref, getDownloadURL, uploadBytes } from 'firebase/storage';
+import * as ImagePicker from 'expo-image-picker';
+
 
 const screenWidth = Dimensions.get('window').width;
 
+
 export default function HomeScreen() {
   const [name, setName] = useState('');
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [visits, setVisits] = useState([
     { name: "The Grog Grill", visits: 0 },
@@ -18,12 +23,15 @@ export default function HomeScreen() {
     { name: "Flip & Bailey's", visits: 0 },
   ]);
 
+
   const barColors = ['#008000', '#00BFFF', '#FF0000', '#ffa500'];
+
 
   const fetchProfileData = async () => {
     const auth = getAuth();
     const firestore = getFirestore();
     const user = auth.currentUser;
+
 
     if (user) {
       try {
@@ -32,7 +40,16 @@ export default function HomeScreen() {
         const userDoc = await getDoc(userDocRef);
         if (userDoc.exists()) {
           const userData = userDoc.data();
-          setName(userData.name || ''); // Assuming 'name' is a field in Firestore
+          setName(userData.name || '');
+          // const storage = getStorage();
+          // const photoRef = ref(storage, `profilePhotos/${user.uid}`);
+          // const photoUrl = await getDownloadURL(photoRef);
+          // setProfilePhotoUrl(photoUrl);
+          // console.log('User profile photo URL set:', photoUrl);
+          if (userData.profilePhotoUrl) {
+            setProfilePhotoUrl(userData.profilePhotoUrl);
+            console.log('User profile photo URL set:', userData.profilePhotoUrl);
+          }
           console.log('User name set:', userData.name);
         } else {
           console.log('User profile document not found.');
@@ -45,16 +62,57 @@ export default function HomeScreen() {
     }
   };
 
+
+  const handleProfilePhotoUpload = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      alert('Permission to access camera roll is required!');
+      return;
+    }
+
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+
+
+    if (!result.canceled) {
+      const auth = getAuth();
+      const user = auth.currentUser;
+      const storage = getStorage();
+
+
+      if (user && result.assets[0].uri) {
+        const response = await fetch(result.assets[0].uri);
+        const blob = await response.blob();
+
+
+        const photoRef = ref(storage, `profilePhotos/${user.uid}`);
+        await uploadBytes(photoRef, blob);
+        const photoUrl = await getDownloadURL(photoRef);
+        setProfilePhotoUrl(photoUrl);
+        console.log('Profile photo uploaded:', photoUrl);
+      }
+    }
+  };
+
+
   useEffect(() => {
     const auth = getAuth();
     const firestore = getFirestore();
     const user = auth.currentUser;
 
+
     if (user) {
       console.log('User is signed in:', user.uid);
 
+
       // Call fetchProfileData to load the user profile
       fetchProfileData();
+
 
       // Real-time listener for tracking data
       const trackingQuery = query(
@@ -62,10 +120,12 @@ export default function HomeScreen() {
         where('userId', '==', user.uid)
       );
 
+
       const unsubscribe = onSnapshot(
         trackingQuery,
         (snapshot) => {
           console.log('Snapshot received. Docs count:', snapshot.docs.length);
+
 
           const visitsData = snapshot.docs.map((doc) => {
             const visit = doc.data() as { location: { title: string } };
@@ -74,6 +134,7 @@ export default function HomeScreen() {
               visits: 1,
             };
           });
+
 
           const aggregatedVisits = visitsData.reduce<{ name: string; visits: number }[]>(
             (acc, visit) => {
@@ -88,6 +149,7 @@ export default function HomeScreen() {
             []
           );
 
+
           const updatedVisits = [
             { name: "The Grog Grill", visits: 0 },
             { name: "Kelly's Taproom", visits: 0 },
@@ -98,6 +160,7 @@ export default function HomeScreen() {
             return match ? { ...bar, visits: match.visits } : bar;
           });
 
+
           setVisits(updatedVisits);
           setLoading(false);
         },
@@ -106,6 +169,7 @@ export default function HomeScreen() {
           setLoading(false);
         }
       );
+
 
       return () => {
         console.log('Unsubscribing from snapshot listener');
@@ -117,37 +181,43 @@ export default function HomeScreen() {
     }
   }, []);
 
+
   const totalVisits = visits.reduce((acc, place) => acc + place.visits, 0);
   const mostVisitedBar = visits.reduce((max, place) => place.visits > max.visits ? place : max, visits[0]).name;
+
 
   if (loading) {
     return <ActivityIndicator size="large" color="#0000ff" />;
   }
 
+
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.container}>
         <View style={styles.header}>
-          <Image 
-            source={require('@/assets/images/usericon.png')}
-            style={styles.logo}
-          />
+        <TouchableOpacity onPress={handleProfilePhotoUpload}>
+            <Image
+              source={profilePhotoUrl ? { uri: profilePhotoUrl } : require('@/assets/images/usericon.png')}
+              style={styles.logo}
+            />
+          </TouchableOpacity>
           <View style={styles.headerTextContainer}>
             <ThemedText type="title" style={styles.name}>{name}</ThemedText>
             <ThemedText type="subtitle" style={styles.school}>Villanova University</ThemedText>
           </View>
         </View>
 
+
         <ThemedView style={styles.contentContainer}>
           <ThemedText type="title" style={styles.recapTitle}>Monthly Recap</ThemedText>
           <View style={styles.chartContainer}>
             {visits.map((place, index) => (
               <View key={index} style={styles.chartBarContainer}>
-                <View 
+                <View
                   style={[
-                    styles.chartBar, 
+                    styles.chartBar,
                     { height: (place.visits / (totalVisits || 1)) * 150, backgroundColor: barColors[index] },
-                  ]} 
+                  ]}
                 />
                 <ThemedText style={styles.barLabel}>{place.name}</ThemedText>
               </View>
@@ -155,11 +225,13 @@ export default function HomeScreen() {
           </View>
         </ThemedView>
 
+
         <View style={styles.superstarContainer}>
           <ThemedText style={styles.superstarText}>
             {totalVisits === 0 ? "Buzz in and see your stats" : `You are a ${mostVisitedBar} Superstar!`}
           </ThemedText>
         </View>
+
 
         <View style={styles.visitsContainer}>
           {visits.map((place, index) => (
@@ -167,11 +239,11 @@ export default function HomeScreen() {
               <ThemedText style={styles.visitText}>
                 {place.visits}/{totalVisits} Visits to {place.name}
               </ThemedText>
-              <Progress.Bar 
+              <Progress.Bar
                 progress={place.visits / (totalVisits || 1)}
                 width={screenWidth * 0.9}
                 color={barColors[index]}
-                style={styles.progressBar} 
+                style={styles.progressBar}
                 borderRadius={10}
                 height={12}
                 unfilledColor="#e0e0e0"
@@ -183,6 +255,7 @@ export default function HomeScreen() {
     </ScrollView>
   );
 }
+
 
 const styles = StyleSheet.create({
   scrollContainer: {

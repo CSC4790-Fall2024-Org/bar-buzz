@@ -17,7 +17,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }) => {
       await signOut(auth);
       Alert.alert("Logged Out", "You have been successfully logged out.");
       onClose(); // Close the modal
-      router.replace("/"); // Navigate to the main entry page (index.tsx)
+      //router.replace("/"); // Navigate to the main entry page (index.tsx)
     } catch (error) {
       console.error("Logout error: ", error);
       Alert.alert("Logout Error", "An error occurred during logout.");
