@@ -6,7 +6,7 @@ import * as Progress from 'react-native-progress';
 import { getAuth } from 'firebase/auth';
 import { getFirestore, collection, query, where, onSnapshot, doc, getDoc } from 'firebase/firestore';
 import { getStorage, ref, getDownloadURL, uploadBytes } from 'firebase/storage';
-import * as ImagePicker from 'expo-image-picker';
+//import * as ImagePicker from 'expo-image-picker';
 
 
 const screenWidth = Dimensions.get('window').width;
@@ -63,41 +63,41 @@ export default function HomeScreen() {
   };
 
 
-  const handleProfilePhotoUpload = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      alert('Permission to access camera roll is required!');
-      return;
-    }
+  // const handleProfilePhotoUpload = async () => {
+  //   const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  //   if (status !== 'granted') {
+  //     alert('Permission to access camera roll is required!');
+  //     return;
+  //   }
 
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
+  //   const result = await ImagePicker.launchImageLibraryAsync({
+  //     mediaTypes: ImagePicker.MediaTypeOptions.Images,
+  //     allowsEditing: true,
+  //     aspect: [1, 1],
+  //     quality: 1,
+  //   });
 
 
-    if (!result.canceled) {
-      const auth = getAuth();
-      const user = auth.currentUser;
-      const storage = getStorage();
+  //   if (!result.canceled) {
+  //     const auth = getAuth();
+  //     const user = auth.currentUser;
+  //     const storage = getStorage();
 
 
-      if (user && result.assets[0].uri) {
-        const response = await fetch(result.assets[0].uri);
-        const blob = await response.blob();
+  //     if (user && result.assets[0].uri) {
+  //       const response = await fetch(result.assets[0].uri);
+  //       const blob = await response.blob();
 
 
-        const photoRef = ref(storage, `profilePhotos/${user.uid}`);
-        await uploadBytes(photoRef, blob);
-        const photoUrl = await getDownloadURL(photoRef);
-        setProfilePhotoUrl(photoUrl);
-        console.log('Profile photo uploaded:', photoUrl);
-      }
-    }
-  };
+  //       const photoRef = ref(storage, `profilePhotos/${user.uid}`);
+  //       await uploadBytes(photoRef, blob);
+  //       const photoUrl = await getDownloadURL(photoRef);
+  //       setProfilePhotoUrl(photoUrl);
+  //       console.log('Profile photo uploaded:', photoUrl);
+  //     }
+  //   }
+  // };
 
 
   useEffect(() => {
@@ -195,12 +195,11 @@ export default function HomeScreen() {
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.container}>
         <View style={styles.header}>
-        <TouchableOpacity onPress={handleProfilePhotoUpload}>
+        
             <Image
               source={profilePhotoUrl ? { uri: profilePhotoUrl } : require('@/assets/images/usericon.png')}
               style={styles.logo}
             />
-          </TouchableOpacity>
           <View style={styles.headerTextContainer}>
             <ThemedText type="title" style={styles.name}>{name}</ThemedText>
             <ThemedText type="subtitle" style={styles.school}>Villanova University</ThemedText>
