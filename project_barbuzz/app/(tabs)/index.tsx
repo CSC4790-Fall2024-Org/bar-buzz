@@ -135,51 +135,68 @@ export default function HomeScreen() {
       resetModal();
     }
   };
+
+
+  const fetchUserData = async (userId: string) => {
+    try {
+      if (!userId) {
+        console.error("User ID not found");
+        return;
+      }
+  
+      // Query Firestore to get the user's document
+      const userRef = collection(db, 'users');
+      const q = query(userRef, where('userId', '==', userId));
+      const querySnapshot = await getDocs(q);
+  
+      if (!querySnapshot.empty) {
+        const userDoc = querySnapshot.docs[0];
+        const userData = userDoc.data();
+        setUserName(userData.name); // Assuming 'name' field exists in the document
+        if (userData.locations) {
+          setUserLocations(userData.locations);
+        }
+      } else {
+        console.error("User document not found in Firestore");
+      }
+    } catch (error) {
+      console.error("Error fetching user data from Firestore:", error);
+    }
+  };  
   
 
  //push
 //FOR REQUIRING THE SIGN ON EVERY TIME   
 
-  useEffect(() => {
-    const checkUserSignUpStatus = async () => {
-      setModalVisible(true);  // Always show the sign-up modal
-    };
-    checkUserSignUpStatus();
-  }, []);
+useEffect(() => {
+  const enforceEmailVerification = async () => {
+    const auth = getAuth();
+    const user = auth.currentUser;
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        // Retrieve userId from AsyncStorage
-        const userId = await AsyncStorage.getItem('userId');
-        if (!userId) {
-          console.error("User ID not found");
-          return;
-        }
-  
-        // Query Firestore to get the user's document
-        const userRef = collection(db, 'users');
-        const q = query(userRef, where('userId', '==', userId));
-        const querySnapshot = await getDocs(q);
-  
-        if (!querySnapshot.empty) {
-          const userDoc = querySnapshot.docs[0];
-          const userData = userDoc.data();
-          setUserName(userData.name); // Assuming 'name' field exists in the document
-          // Fetch and set locations if available
-          if (userData.locations) {
-            setUserLocations(userData.locations);
-          }
-        } else {
-          //console.error("User document not found in Firestore");
-        }
-      } catch (error) {
-        console.error("Error fetching user data from Firestore:", error);
+    if (user) {
+      await user.reload(); // Reload user state to get latest information
+      console.log("Enforcing email verification:", user.emailVerified);
+
+      if (!user.emailVerified) {
+        console.log("User email is not verified. Signing out...");
+        Alert.alert(
+          "Email Not Verified",
+          "Please verify your email to access the app. Check your inbox and spam folder."
+        );
+        await signOut(auth); // Sign out unverified user
+        setModalVisible(true); // Show modal for unverified users
+      } else {
+        console.log("User email is verified.");
+        setModalVisible(false); // Hide modal for verified users
       }
-    };
-  
-    fetchUserData();
-  }, []);
+    } else {
+      console.log("No user is signed in. Showing sign-up modal.");
+      setModalVisible(true); // Show modal if no user is signed in
+    }
+  };
+
+  enforceEmailVerification();
+}, []);  
   
 
   const handleDobChange = (input: string) => {
@@ -196,156 +213,102 @@ export default function HomeScreen() {
 
 
   const handleSignIn = async () => {
+    console.log("Attempting to sign in...");
+    const auth = getAuth();
+  
     try {
-      const auth = getAuth();
       const response = await signInWithEmailAndPassword(auth, email, password);
       const user = auth.currentUser;
   
-      // Check if the user is signed in and if their email is verified
       if (user) {
+        // Reload user to get the latest verification status
+        await user.reload();
+        console.log("Email verification status:", user.emailVerified);
+  
         if (!user.emailVerified) {
-          Alert.alert('Email Not Verified', 'Please verify your email to access the app.');
-          await signOut(auth); // Sign out if the email is not verified
+          console.log("User email is not verified. Signing out...");
+          Alert.alert("Email Not Verified", "Please verify your email to access the app. Check your inbox and spam folder.");
+          await signOut(auth);
+          setModalVisible(true);
           return;
         }
   
-        // User is signed in and email is verified
-        await AsyncStorage.setItem('userId', user.uid);
-  
-        // Fetch user profile data from Firestore
-        const userRef = query(collection(db, 'users'), where('userId', '==', user.uid));
-        const snapshot = await getDocs(userRef);
-        if (!snapshot.empty) {
-          const userData = snapshot.docs[0].data();
-          setName(userData.name); // Set name in state
-          console.log('User data from Firestore:', userData);
-  
-          // Use userData.name directly in the Alert
-          Alert.alert('Success', `Welcome back to BarBuzz, ${userData.name}!`);
-        } else {
-          //console.error('User profile not found in Firestore.');
-        }
-  
-        setModalVisible(false); // Close the modal after successful sign-in
-      } else {
-        console.error('No user is signed in.');
+        console.log("User is verified. Proceeding with login...");
+        await AsyncStorage.setItem("userId", user.uid);
+        setModalVisible(false);
+        Alert.alert("Welcome", `Welcome back to BarBuzz, ${user.email}!`);
       }
     } catch (error) {
-      console.error('Error signing in:', error);
-      Alert.alert('Error', 'Invalid credentials or an issue with sign-in. Please try again.');
+      console.error("Error during sign-in:", error);
+      Alert.alert("Error", "Sign-in failed. Please try again.");
     }
-    console.log('User ID stored:', await AsyncStorage.getItem('userId'));
-  };    
+  };
+  
 
-const completeSignUp = async () => {
-  const auth = getAuth();
-  const firestore = getFirestore();
-  const [month, day, year] = dob.split('/');
-  const formattedDob = `${year}-${month}-${day}`;
-
-  try {
-      console.log("Completing Sign Up...");
-
-      // Create user and get user ID
+  const handleSignUp = async () => {
+    console.log("Attempting to sign up...");
+    
+    // Validate input fields
+    if (!email || !name || !password || !dob) {
+      Alert.alert('Missing Information', 'Please complete all required fields.');
+      return;
+    }
+  
+    // Villanova email check
+    if (!email.endsWith('@villanova.edu')) {
+      Alert.alert('Invalid Email', 'Please use a Villanova email address.');
+      return;
+    }
+  
+    // Age restriction check
+    const birthYear = parseInt(dob.split('/')[2]);
+    const currentYear = new Date().getFullYear();
+    if (currentYear - birthYear < 21) {
+      Alert.alert('Age Restriction', 'You must be 21+ to sign up.');
+      return;
+    }
+  
+    const auth = getAuth();
+  
+    try {
+      console.log("Creating user with email:", email);
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-
-      // Save the user data under their UID in Firestore
-      await setDoc(doc(firestore, 'users', user.uid), {
+  
+      // User created successfully - ensure they are logged out immediately
+      if (user) {
+        console.log("User created:", user.uid);
+        await sendEmailVerification(user);
+        console.log("Verification email sent to:", email);
+        
+        // Sign out the user to prevent access before verification
+        await signOut(auth);
+        console.log("User signed out after registration.");
+        Alert.alert("Verification Required", "A verification email has been sent to your email address. Please verify before signing in.");
+        
+        // Save user data to Firestore for reference
+        const firestore = getFirestore();
+        const [month, day, year] = dob.split('/');
+        const formattedDob = `${year}-${month}-${day}`;
+        
+        await setDoc(doc(firestore, 'users', user.uid), {
           name,
           email,
           dob: formattedDob,
-      });
-
-      setName(name);
-
-      // Store userId locally in AsyncStorage for future reference
-      await AsyncStorage.setItem('userId', user.uid); 
-
-      // Close modal and show success message
-      setModalVisible(true);
-      Alert.alert('Success', `Welcome to BarBuzz, ${name}!`);
-  } catch (error) {
-      const errorMessage = (error instanceof Error) ? error.message : 'An unknown error occurred';
-      console.error('Error completing sign-up:', errorMessage);
-      Alert.alert('Error', errorMessage);
-  }
-};
-
-const handleSignUp = async () => {
-  console.log("Button Clicked!");
-
-  // Check that all required fields are filled out
-  if (!email || !name || !password || !dob) {
-    Alert.alert('Missing Information', 'Please complete all required fields.');
-    return;
-  }
-
-  // Villanova email check
-  if (!email.endsWith('@villanova.edu')) {
-    Alert.alert('Invalid Email', 'Please use a Villanova email address.');
-    return;
-  }
-
-  // Age restriction check
-  const birthYear = new Date(dob).getFullYear();
-  const currentYear = new Date().getFullYear();
-  if (currentYear - birthYear < 21) {
-    Alert.alert('Age Restriction', 'You must be 21+ to sign up.');
-    return;
-  }
-
-  //Define formattedDob and name
-  const [month, day, year] = dob.split('/');
-  const formattedDob = `${year}-${month}-${day}`;
-
-  const auth = getAuth();
-  const firestore = getFirestore();
-
-  try {
-    console.log("Sending request to Firestore...");
-
-    // Create user and get user ID
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
-
-    // Step 1: Send email verification
-    await sendEmailVerification(user);
-    Alert.alert('Email Verification', 'A verification email has been sent. Please verify to complete registration.');
-
-    // Step 2: Save the user data with separate fields for first and last name
-    await setDoc(doc(firestore, 'users', user.uid), {
-      name, // Stored concatenated name
-      email,
-      dob: formattedDob,
-    });
-
-    // Step 3: Sign out user to prevent unverified access
-    await signOut(auth);
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-    console.error('Error signing up:', errorMessage);
-    Alert.alert('Error', errorMessage);
-  }
-};
-
-const checkVerificationStatus = async () => {
-  const auth = getAuth();
+        });
+        console.log("User data saved to Firestore for UID:", user.uid);
   
-  // Ensure auth.currentUser is not null
-  if (auth.currentUser) {
-    await auth.currentUser.reload(); // Reload user to get the latest verification status
-
-    if (auth.currentUser.emailVerified) {
-      Alert.alert('Verified', 'Your email is now verified. You can log in.');
-    } else {
-      Alert.alert('Not Verified', 'Please verify your email to proceed.');
+      }
+  
+      // Show sign-in modal after sign out
+      setIsSignUp(false);
+      setModalVisible(true);
+  
+    } catch (error) {
+      console.error("Error during sign-up:", error);
+      Alert.alert('Error', 'Sign-up failed. Please try again.');
     }
-  } else {
-    console.error('No user is currently signed in.');
-    Alert.alert('Error', 'No user is currently signed in.');
-  }
-};
+  };  
 
   return (
     <>
