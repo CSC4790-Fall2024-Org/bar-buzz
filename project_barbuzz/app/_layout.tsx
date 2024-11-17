@@ -38,7 +38,13 @@ export default function RootLayout() {
       <SafeAreaView style={{ flex: 1 }}>
         <Stack>
           {/* Hide header for (tabs) */}
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen
+          name="(tabs)"
+          options={{
+            headerShown: false, // Hides the header completely
+            title: 'Bars', // Optional: Sets a blank title if the header is shown elsewhere
+          }}
+        />
           {/* Define other screens with headers */}
           { /* <Stack.Screen name="detail" options={{ title: 'Friends' }} />*/}
           { /* <Stack.Screen name="+not-found" options={{ headerShown: false }} />  */}

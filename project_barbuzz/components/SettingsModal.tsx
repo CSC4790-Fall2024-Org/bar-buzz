@@ -2,6 +2,7 @@ import React from 'react';
 import { Modal, View, Text, Button, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import { getAuth, signOut } from 'firebase/auth';
 import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface SettingsModalProps {
   visible: boolean;
@@ -14,15 +15,21 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }) => {
   const handleLogout = async () => {
     const auth = getAuth();
     try {
-      await signOut(auth);
+      await signOut(auth); // Log out from Firebase
+      await AsyncStorage.clear(); // Clear stored user data
+  
       Alert.alert("Logged Out", "You have been successfully logged out.");
       onClose(); // Close the modal
-      //router.replace("/"); // Navigate to the main entry page (index.tsx)
+  
+      // Redirect to sign-in page
+      router.replace("/signup");
     } catch (error) {
       console.error("Logout error: ", error);
       Alert.alert("Logout Error", "An error occurred during logout.");
     }
   };
+  
+  
   
 
   return (
