@@ -190,47 +190,56 @@ export default function HomeScreen() {
     return <ActivityIndicator size="large" color="#0000ff" />;
   }
 
-
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.container}>
         <View style={styles.header}>
-        
-            <Image
-              source={profilePhotoUrl ? { uri: profilePhotoUrl } : require('@/assets/images/usericon.png')}
-              style={styles.logo}
-            />
+          <Image
+            source={
+              profilePhotoUrl
+                ? { uri: profilePhotoUrl }
+                : require('@/assets/images/usericon.png')
+            }
+            style={styles.logo}
+          />
           <View style={styles.headerTextContainer}>
-            <ThemedText type="title" style={styles.name}>{name}</ThemedText>
-            <ThemedText type="subtitle" style={styles.school}>Villanova University</ThemedText>
+            <ThemedText type="title" style={styles.name}>
+              {name}
+            </ThemedText>
+            <ThemedText type="subtitle" style={styles.school}>
+              Villanova University
+            </ThemedText>
           </View>
         </View>
 
-
         <ThemedView style={styles.contentContainer}>
-          <ThemedText type="title" style={styles.recapTitle}>Monthly Recap</ThemedText>
-          <View style={styles.chartContainer}>
-            {visits.map((place, index) => (
-              <View key={index} style={styles.chartBarContainer}>
-                <View
-                  style={[
-                    styles.chartBar,
-                    { height: (place.visits / (totalVisits || 1)) * 150, backgroundColor: barColors[index] },
-                  ]}
-                />
-                <ThemedText style={styles.barLabel}>{place.name}</ThemedText>
-              </View>
-            ))}
-          </View>
-        </ThemedView>
+  <ThemedText type="title" style={styles.recapTitle}>Monthly Recap</ThemedText>
+  <View style={styles.chartContainer}>
+    {visits.map((place, index) => (
+      <View key={index} style={styles.chartBarContainer}>
+        <View
+          style={[
+            styles.chartBar,
+            {
+              height: Math.min((place.visits / (totalVisits || 1)) * 150, 150), // Limit bar height
+              backgroundColor: barColors[index],
+            },
+          ]}
+        />
+        <ThemedText style={styles.barLabel} numberOfLines={2}>{place.name}</ThemedText>
+      </View>
+    ))}
+  </View>
+</ThemedView>
 
 
         <View style={styles.superstarContainer}>
           <ThemedText style={styles.superstarText}>
-            {totalVisits === 0 ? "Buzz in and see your stats" : `You are a ${mostVisitedBar} Superstar!`}
+            {totalVisits === 0
+              ? 'Buzz in and see your stats'
+              : `You are a ${mostVisitedBar} Superstar!`}
           </ThemedText>
         </View>
-
 
         <View style={styles.visitsContainer}>
           {visits.map((place, index) => (
@@ -262,7 +271,9 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+   // backgroundColor: 'transparent', // Set to transparent
+   backgroundColor: '#FFFFFF',
+
   },
   header: {
     flexDirection: 'row',
@@ -294,13 +305,21 @@ const styles = StyleSheet.create({
   recapTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 15,
+   // marginBottom: 15,
+  },
+  chartWrapper: {
+    marginTop: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 10,
   },
   chartContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'flex-end',
-    height: 150,
+    height: 180,
+    paddingVertical: 10,
+    overflow: 'hidden',
   },
   chartBarContainer: {
     justifyContent: 'center',
