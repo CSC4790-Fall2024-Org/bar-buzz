@@ -67,7 +67,8 @@ type Location = {
 
 export default function HomeScreen() {
   const [modalVisible, setModalVisible] = useState(false);
-  //const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [dob, setDob] = useState('');
@@ -141,7 +142,7 @@ export default function HomeScreen() {
     try {
       if (!userId) {
         console.error("User ID not found");
-        return;
+        return null;
       }
   
       // Query Firestore to get the user's document
@@ -152,15 +153,18 @@ export default function HomeScreen() {
       if (!querySnapshot.empty) {
         const userDoc = querySnapshot.docs[0];
         const userData = userDoc.data();
-        setUserName(userData.name); // Assuming 'name' field exists in the document
+        setUserName(userData.name); // Update state for later use if needed
         if (userData.locations) {
           setUserLocations(userData.locations);
         }
+        return userData; // Return user data for immediate use
       } else {
-        console.error("User document not found in Firestore");
+        //console.error("User document not found in Firestore");
+        return null;
       }
     } catch (error) {
       console.error("Error fetching user data from Firestore:", error);
+      return null;
     }
   };  
   
@@ -213,46 +217,63 @@ useEffect(() => {
 
 
   const handleSignIn = async () => {
-    console.log("Attempting to sign in...");
-    const auth = getAuth();
-  
     try {
+      const auth = getAuth();
       const response = await signInWithEmailAndPassword(auth, email, password);
       const user = auth.currentUser;
   
       if (user) {
-        // Reload user to get the latest verification status
-        await user.reload();
-        console.log("Email verification status:", user.emailVerified);
+        await user.reload(); // Reload user to get the latest verification status
   
-        if (!user.emailVerified) {
-          console.log("User email is not verified. Signing out...");
-          Alert.alert("Email Not Verified", "Please verify your email to access the app. Check your inbox and spam folder.");
-          await signOut(auth);
-          setModalVisible(true);
-          return;
+        // Retry mechanism to enforce a strict check
+        let retryCount = 0;
+        while (!user.emailVerified && retryCount < 3) {
+          console.log("User email not verified. Retrying...");
+          await new Promise(resolve => setTimeout(resolve, 3000)); // Wait 3 seconds
+          await user.reload(); // Reload user
+          retryCount++;
         }
   
-        console.log("User is verified. Proceeding with login...");
-        await AsyncStorage.setItem("userId", user.uid);
-        setModalVisible(false);
-        Alert.alert("Welcome", `Welcome back to BarBuzz, ${user.email}!`);
+        if (user.emailVerified) {
+          // Proceed with login
+          console.log("Email verified. Proceeding with login...");
+          await AsyncStorage.setItem('userId', user.uid);
+          setModalVisible(false);
+  
+          // Fetch user data to get the user's name
+          const userData = await fetchUserData(user.uid); // Fetch the user data directly
+  
+          if (userData && userData.name) {
+            Alert.alert("Success", `Welcome to BarBuzz, ${userData.name}`);
+          } else {
+            console.log("User data not found or missing name.");
+            Alert.alert("Success", "Welcome to BarBuzz!");
+          }
+        } else {
+          // Sign out if email is still not verified after retries
+          console.log("User email not verified after retries. Signing out...");
+          await signOut(auth);
+          Alert.alert("Email Not Verified", "Please verify your email to access the app.");
+          setModalVisible(true); // Show modal for unverified users
+        }
       }
     } catch (error) {
-      console.error("Error during sign-in:", error);
-      Alert.alert("Error", "Sign-in failed. Please try again.");
+      console.error("Error signing in:", error);
+      Alert.alert("Error", "Invalid credentials or an issue with sign-in. Please try again.");
     }
-  };
+  };  
   
 
   const handleSignUp = async () => {
     console.log("Attempting to sign up...");
     
     // Validate input fields
-    if (!email || !name || !password || !dob) {
+    if (!email || !firstName || !lastName || !password || !dob) {
       Alert.alert('Missing Information', 'Please complete all required fields.');
       return;
     }
+
+    const name = `${firstName.trim()} ${lastName.trim()}`;
   
     // Villanova email check
     if (!email.endsWith('@villanova.edu')) {
@@ -377,16 +398,27 @@ useEffect(() => {
 {/* Additional fields for Sign Up only */}
 {isSignUp && (
           <>
-            {/* Name Input */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Enter your Name*</Text>
-              <TextInput
-                value={name}
-                onChangeText={setName}
-                style={styles.input}
-                placeholder="Your name"
-              />
-            </View>
+{/* First Name Input */}
+<View style={styles.inputContainer}>
+          <Text style={styles.inputLabel}>First Name*</Text>
+          <TextInput
+            value={firstName}
+            onChangeText={setFirstName}
+            style={styles.input}
+            placeholder="Your first name"
+          />
+        </View>
+
+        {/* Last Name Input */}
+        <View style={styles.inputContainer}>
+          <Text style={styles.inputLabel}>Last Name*</Text>
+          <TextInput
+            value={lastName}
+            onChangeText={setLastName}
+            style={styles.input}
+            placeholder="Your last name"
+          />
+        </View>
 
             {/* Date of Birth Input */}
             <View style={styles.inputContainer}>
