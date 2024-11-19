@@ -5,6 +5,8 @@ import { TabBarIcon } from '@/components/navigation/TabBarIcon';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import SettingsModal from '@/components/SettingsModal'; // Adjust path as necessary
+import PushNotificationHandler from '../PushNotificationHandler';
+
 
 const TabLayout: React.FC = () => {
   const colorScheme = useColorScheme();
