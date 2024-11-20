@@ -1,6 +1,6 @@
 import React from 'react';
 import { Modal, View, Text, Button, StyleSheet, Alert, TouchableOpacity } from 'react-native';
-import { getAuth, signOut } from 'firebase/auth';
+import { getAuth, signOut, sendPasswordResetEmail } from 'firebase/auth';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -11,9 +11,9 @@ interface SettingsModalProps {
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }) => {
   const router = useRouter(); // Initialize router
+  const auth = getAuth(); // Firebase auth instance
 
   const handleLogout = async () => {
-    const auth = getAuth();
     try {
       await signOut(auth); // Log out from Firebase
       await AsyncStorage.clear(); // Clear stored user data
@@ -28,9 +28,21 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }) => {
       Alert.alert("Logout Error", "An error occurred during logout.");
     }
   };
-  
-  
-  
+
+  const handlePasswordReset = async () => {
+    const user = auth.currentUser;
+    if (user) {
+      try {
+        await sendPasswordResetEmail(auth, user.email!); // Send password reset email
+        Alert.alert("Password Reset", "A password reset email has been sent.");
+      } catch (error) {
+        console.error("Password reset error: ", error);
+        Alert.alert("Password Reset Error", "An error occurred while sending the password reset email.");
+      }
+    } else {
+      Alert.alert("User Not Found", "No user is currently logged in.");
+    }
+  };
 
   return (
     <Modal
@@ -41,12 +53,18 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }) => {
     >
       <View style={styles.modalBackground}>
         <View style={styles.modalContainer}>
-          <Text style={styles.modalTitle}>Settings - log out not functioning </Text>
-          {/* Settings options can be added here */}
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <Text style={styles.logoutButtonText}>Log Out</Text>
+          <Text style={styles.modalTitle}>Settings</Text>
+          {/* Log Out Button */}
+          <TouchableOpacity style={styles.button} onPress={handleLogout}>
+            <Text style={styles.buttonText}>Log Out</Text>
           </TouchableOpacity>
-          <Button title="Close" onPress={onClose} />
+          {/* Reset Password Button */}
+          <TouchableOpacity style={styles.button} onPress={handlePasswordReset}>
+            <Text style={styles.buttonText}>Reset Password</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+            <Text style={styles.closeButtonText}>Close</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </Modal>
@@ -61,28 +79,47 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent background
   },
   modalContainer: {
-    width: 300,
-    padding: 20,
+    width: 320,
+    padding: 30,
     backgroundColor: 'white',
-    borderRadius: 10,
+    borderRadius: 15,
     alignItems: 'center',
+    elevation: 5, // Adds a subtle shadow to lift the modal
   },
   modalTitle: {
-    fontSize: 20,
-    marginBottom: 20,
+    fontSize: 24,
+    fontWeight: '600',
+    marginBottom: 30,
+    color: '#333',
+  },
+  button: {
+    backgroundColor: '#4CAF50', // Modern green color
+    paddingVertical: 12,
+    paddingHorizontal: 25,
+    borderRadius: 8,
+    marginVertical: 12,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
     textAlign: 'center',
   },
-  logoutButton: {
-    backgroundColor: 'green', // Green color for logout button
+  closeButton: {
+    backgroundColor: '#FF6347', // Red color for close button
     paddingVertical: 10,
     paddingHorizontal: 20,
-    borderRadius: 5,
-    marginVertical: 10,
+    borderRadius: 8,
+    marginTop: 10,
+    width: '100%',
+    alignItems: 'center',
   },
-  logoutButtonText: {
+  closeButtonText: {
     color: 'white',
     fontSize: 16,
-    fontWeight: 'bold',
     textAlign: 'center',
   },
 });
