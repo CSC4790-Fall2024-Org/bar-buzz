@@ -486,59 +486,51 @@ useEffect(() => {
 >
   <View style={styles.modalContainer}>
     <View style={styles.blankBox}>
-      {/* Close Button */}
-      <TouchableOpacity style={styles.closeButton} onPress={() => setPinModalVisible(false)}>
-        <Text style={styles.closeButtonText}>X</Text>
-      </TouchableOpacity>
+      {/* Title at the top */}
+      <View style={styles.titleContainer}>
+        <Text style={styles.modalTitle}>Buzz In!</Text>
+        <TouchableOpacity style={styles.closeButton} onPress={() => setPinModalVisible(false)}>
+          <Text style={styles.closeButtonText}>X</Text>
+        </TouchableOpacity>
+      </View>
 
-      {/* Container for Questions */}
+      {/* Questions */}
       <View style={styles.questionsStack}>
-        {/* Question 1: Are you currently here? */}
         <View style={styles.questionContainer}>
           <Text style={styles.questionText}>Are you currently here?</Text>
           <TouchableOpacity 
-          style={[styles.radioCircle, currentlyHere && styles.selectedRadioCircle]} 
-          onPress={() => {
-          if (currentlyHere) {
-            setCurrentlyHere(false);  // Clear if already selected
-          } else {
-            setCurrentlyHere(true);
-            setPlanningToAttend(false);  // Ensure only one option is selected
-          }
-        }}
-      />
+            style={[styles.radioCircle, currentlyHere && styles.selectedRadioCircle]} 
+            onPress={() => {
+              setCurrentlyHere(!currentlyHere);
+              if (!currentlyHere) setPlanningToAttend(false); // Deselect the other option
+            }}
+          />
+        </View>
+        <View style={styles.questionContainer}>
+          <Text style={styles.questionText}>Are you planning to attend?</Text>
+          <TouchableOpacity 
+            style={[styles.radioCircle, planningToAttend && styles.selectedRadioCircle]} 
+            onPress={() => {
+              setPlanningToAttend(!planningToAttend);
+              if (!planningToAttend) setCurrentlyHere(false); // Deselect the other option
+            }}
+          />
+        </View>
       </View>
 
-      {/* Question 2: Are you planning to attend? */}
-      <View style={styles.questionContainer}>
-      <Text style={styles.questionText}>Are you planning to attend?</Text>
-  <TouchableOpacity 
-    style={[styles.radioCircle, planningToAttend && styles.selectedRadioCircle]} 
-    onPress={() => {
-      if (planningToAttend) {
-        setPlanningToAttend(false);  // Clear if already selected
-      } else {
-        setPlanningToAttend(true);
-        setCurrentlyHere(false);  // Ensure only one option is selected
-      }
-    }}
-  />
-</View>
-</View>
-
-
-
-      {/* "Buzzed" Button */}
-      <TouchableOpacity 
-        style={styles.buzzedButton} 
-        onPress={handleBuzzedSubmit} // Handler for submission
+      {/* Submit Button */}
+      <TouchableOpacity
+        style={styles.submitButton}
+        onPress={handleBuzzedSubmit}
         disabled={!currentlyHere && !planningToAttend} // Disable if no option is selected
       >
-        <Text style={styles.buzzedButtonText}>Buzzed</Text>
+        <Text style={styles.submitButtonText}>Submit</Text>
       </TouchableOpacity>
     </View>
   </View>
 </Modal>
+
+
     </>
   );
 }
@@ -550,35 +542,33 @@ const styles = StyleSheet.create({
     width: 20,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: '#1E90FF',  // Circle border color
-    alignItems: 'center',
+    borderColor: 'black',
     justifyContent: 'center',
-    marginLeft: 10,
+    alignItems: 'center',
   },
   selectedRadioCircle: {
-    backgroundColor: '#1E90FF', // Circle fill when selected
+    backgroundColor: '#1E90FF',
   },
   questionContainer: {
-    width: '100%',
-    flexDirection: 'row', // Align question text and circle
-    justifyContent: 'space-between', // Space between text and circle
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 15, 
-    marginTop: 15,
+    marginBottom: 15,
   },
   buzzedButton: {
-    backgroundColor: '#6FCF97', // Green color for the button
+    backgroundColor: '#6FCF97',
     padding: 15,
-    borderRadius: 5,
-    width: '80%', // Width of the button
+    borderRadius: 8,
+    width: '85%',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 20,
+    marginTop: 25,
+    opacity: 0.8, // Slight opacity for a more modern look
   },
   buzzedButtonText: {
     color: 'white',
     fontWeight: 'bold',
-    fontSize: 16,
+    fontSize: 18,
   },
   container: {
     flex: 1, 
@@ -600,10 +590,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   questionsStack: {
-    flexDirection: 'column', // Stack questions vertically
-    alignItems: 'center', // Center questions horizontally
-    justifyContent: 'center', // Center questions vertically within the stack
-    width: '100%', // Take full width of blank box
+    marginBottom: 20,
   },
   listItem: {
     fontSize: 16,
@@ -614,14 +601,20 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Dark background to make modal stand out
+  },
+  modalContent: {
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    width: '100%',
   },
   modalView: {
-    width: 300,
-    padding: 20,
-    backgroundColor: 'white',
-    borderRadius: 10,
+    width: 320,
+    padding: 30,
+    backgroundColor: '#fff',
+    borderRadius: 15,
     alignItems: 'center',
+    elevation: 10, // Shadow effect for depth
   },
   welcomeText: {
     fontSize: 24,
@@ -653,20 +646,20 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     backgroundColor: '#6FCF97',
-    padding: 15,
+    paddingVertical: 10,
     borderRadius: 5,
-    width: '100%',
     alignItems: 'center',
   },
   submitButtonText: {
+    fontSize: 16,
     color: 'white',
     fontWeight: 'bold',
-    fontSize: 16,
   },
   titleContainer: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 8,
+    marginBottom: 20,
   },
   stepContainer: {
     gap: 8,
@@ -680,12 +673,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   questionText: {
-    flex: 1, // Allow the text to take up available space
-   // fontSize: 15,
-    textAlign: 'left', // Align text to the left
-    //marginRight: 5, // Space between text and button
-    fontWeight: 'bold',
-    marginRight:10,
+    fontSize: 16,
+    color: 'black',
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -708,14 +697,18 @@ const styles = StyleSheet.create({
     textAlign: 'center', // Ensure text is centered
     //lineHeight: 40,
   },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
   blankBox: {
     width: 300,
-    //height: 150,
     padding: 20,
     backgroundColor: 'white',
     borderRadius: 10,
-    justifyContent: 'center', 
-    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'black',
+    alignItems: 'stretch', // Stretch content to align title and questions
   },
   yesButton: {
     backgroundColor: '#1E90FF',
@@ -728,14 +721,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center', // Center the text vertically
   },
   closeButton: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    //padding: 5, // Add padding to make it clickable
+    backgroundColor: 'white',
+    padding: 5,
+    borderRadius: 50,
   },
   closeButtonText: {
-    fontSize: 24, // Make the "X" larger
-    color: 'black', // Set the color for the "X"
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: 'black',
   },
    scrollViewContent: {
         padding: 10, // Example styles
