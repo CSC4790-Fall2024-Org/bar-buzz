@@ -17,13 +17,15 @@ const profileIcons = [
   require('@/assets/images/wine.png'),
 ];
 
+const defaultProfilePhotoUrl = Image.resolveAssetSource(
+  require('@/assets/images/usericon.png')
+).uri;
+
 
 
 export default function HomeScreen() {
   const [name, setName] = useState('');
-  const [profilePhotoUrl, setProfilePhotoUrl] = useState<string>(
-    Image.resolveAssetSource(require('@/assets/images/usericon.png')).uri
-  );
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState<string>(defaultProfilePhotoUrl);
   const [loading, setLoading] = useState(true);
   const [isModalVisible, setModalVisible] = useState(false);
   const [showIconSelector, setShowIconSelector] = useState(false);
@@ -52,23 +54,17 @@ export default function HomeScreen() {
         if (userDoc.exists()) {
           const userData = userDoc.data();
           setName(userData.name || '');
-  
-          if (userData.profilePhotoUrl) {
-            // If the URL exists, use it
-            setProfilePhotoUrl(userData.profilePhotoUrl);
+        
+          if (userData.profileIcon) {
+            const iconIndex = parseInt(userData.profileIcon.replace('icon', ''), 10) - 1;
+            setProfilePhotoUrl(Image.resolveAssetSource(profileIcons[iconIndex] || require('@/assets/images/usericon.png')).uri);
           } else {
-            // If no photo URL exists, set to default `usericon.png`
-            const defaultIcon = Image.resolveAssetSource(require('@/assets/images/usericon.png')).uri;
-  
-            await updateDoc(userDocRef, {
-              profilePhotoUrl: defaultIcon,
-            });
-  
-            setProfilePhotoUrl(defaultIcon);
+            setProfilePhotoUrl(Image.resolveAssetSource(require('@/assets/images/usericon.png')).uri);
           }
         } else {
           setName('Unknown User');
         }
+        
       } catch (error) {
         console.error('Error fetching user profile:', error);
         setName('Error Loading Name');
@@ -77,7 +73,7 @@ export default function HomeScreen() {
   };
 
   useEffect(() => {
-    fetchProfileData();
+    setProfilePhotoUrl(defaultProfilePhotoUrl);
   }, []);
 
   const handleIconSelect = async (iconIndex: number | null) => {
@@ -88,23 +84,24 @@ export default function HomeScreen() {
     if (user) {
       try {
         if (iconIndex !== null) {
-          // Set selected icon
-          const selectedIcon = profileIcons[iconIndex];
+          // Store the selected icon index or identifier
+          const selectedIcon = `icon${iconIndex + 1}`;
           const userDocRef = doc(firestore, 'users', user.uid);
           await updateDoc(userDocRef, {
-            profilePhotoUrl: `icon${iconIndex + 1}`,
+            profileIcon: selectedIcon,
           });
   
-          setProfilePhotoUrl(Image.resolveAssetSource(selectedIcon).uri);
+          // Optionally update state for UI feedback
+          setProfilePhotoUrl(Image.resolveAssetSource(profileIcons[iconIndex]).uri);
         } else {
           // Reset to default icon
-          const defaultIcon = require('@/assets/images/usericon.png');
+          const defaultIcon = 'default';
           const userDocRef = doc(firestore, 'users', user.uid);
           await updateDoc(userDocRef, {
-            profilePhotoUrl: 'default',
+            profileIcon: defaultIcon,
           });
   
-          setProfilePhotoUrl(Image.resolveAssetSource(defaultIcon).uri);
+          setProfilePhotoUrl(Image.resolveAssetSource(require('@/assets/images/usericon.png')).uri);
         }
   
         setShowIconSelector(false);
@@ -113,6 +110,8 @@ export default function HomeScreen() {
       }
     }
   };
+  
+  
 
 
   useEffect(() => {
@@ -130,7 +129,6 @@ export default function HomeScreen() {
         collection(firestore, 'tracking'),
         where('userId', '==', user.uid)
       );
-
 
       const unsubscribe = onSnapshot(
         trackingQuery,
@@ -211,7 +209,7 @@ export default function HomeScreen() {
             profilePhotoUrl
             ? { uri: profilePhotoUrl }
             : require('@/assets/images/usericon.png')
-          }
+            }
           style={styles.logo}
         />
           </TouchableOpacity>
@@ -393,7 +391,7 @@ const styles = StyleSheet.create({
   iconSelector: {
     flexDirection: 'row',
     justifyContent: 'space-evenly',
-    marginVertical: 20,
+    marginVertical: 0,
   },
   icon: {
     width: 80,
@@ -401,7 +399,7 @@ const styles = StyleSheet.create({
   },
   iconSelectorContainer: {
     alignItems: 'center',
-    marginVertical: 20,
+    marginVertical: 0,
   },
   cancelButton: {
     marginTop: 10,

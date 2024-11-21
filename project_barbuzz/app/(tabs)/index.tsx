@@ -316,6 +316,7 @@ useEffect(() => {
           name,
           email,
           dob: formattedDob,
+          profileIcon:'default',
         });
         console.log("User data saved to Firestore for UID:", user.uid);
   
