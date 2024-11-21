@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   button: {
-    backgroundColor: '#4CAF50', // Modern green color
+    backgroundColor: '#6FCF97', // Modern green color
     paddingVertical: 12,
     paddingHorizontal: 25,
     borderRadius: 8,
