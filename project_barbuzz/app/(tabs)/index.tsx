@@ -1,59 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Modal, View, Text, TextInput, StyleSheet, TouchableOpacity, FlatList, Alert } from 'react-native';
+import { KeyboardAvoidingView, AppState, Modal, View, Text, TextInput, StyleSheet, TouchableOpacity, FlatList, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { StatusBar } from 'expo-status-bar';
 import MapView, { Marker, Region } from 'react-native-maps';
 import { collection, getDocs, query, where, addDoc } from 'firebase/firestore';
 import { ScrollView } from 'react-native';
-// Import Firestore and Auth from firebase.js
-// index.tsx
 import { auth, db } from '../config/firebaseConfig.js';
-//import { auth } from '../../../barbuzz-backend/firebaseConfig.js'; // Ensure the path is correct
 import { getAuth, createUserWithEmailAndPassword, sendEmailVerification, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
 import { LogBox } from 'react-native';
 LogBox.ignoreLogs(['@firebase/auth']);
 
-
-//import { auth } from 'firebase/auth';
-//import { auth } from '@/barbuzz-backend/firebaseConfig.js'; 
-//import { createUserWithEmailAndPassword } from 'firebase/auth';
-
-
 let showLocationsOfInterest = [
-  {
-    title: "The Grog Grill",
-    location: {
-      latitude: 40.02257990031775,
-      longitude: -75.32031440725875
-    },
-    description: "Buzz in"
-  },
-  {
-    title: "Kelly's Taproom",
-    location: {
-      latitude: 40.02458,
-      longitude: -75.32429
-    },
-    description: "Buzz in"
-  },
-  {
-    title: "McSorley's",
-    location: {
-      latitude: 39.993037576566806,
-      longitude: -75.29751787647021
-    },
-    description: "Buzz in"
-  },
-  {
-    title: "Flip & Bailey's",
-    location: {
-      latitude: 40.02547645051331,
-      longitude: -75.33737617922777
-    },
-    description: "Buzz in"
-  }
+  { title: "The Grog Grill", location: { latitude: 40.02257990031775, longitude: -75.32031440725875 }, description: "Buzz in" },
+  { title: "Kelly's Taproom", location: { latitude: 40.02458, longitude: -75.32429 }, description: "Buzz in" },
+  { title: "McSorley's", location: { latitude: 39.993037576566806, longitude: -75.29751787647021 }, description: "Buzz in" },
+  { title: "Flip & Bailey's", location: { latitude: 40.02547645051331, longitude: -75.33737617922777 }, description: "Buzz in" }
 ]
 
 type Location = {
@@ -84,7 +47,7 @@ export default function HomeScreen() {
   const [userLocations, setUserLocations] = useState([]);
 
   const onRegionChange = (region: Region) => {
-    console.log(region);
+    //console.log(region);
   };
 
   const moveToLocation = (location: { latitude: number, longitude: number }) => {
@@ -318,7 +281,6 @@ useEffect(() => {
           dob: formattedDob,
           profileIcon:'default',
         });
-        console.log("User data saved to Firestore for UID:", user.uid);
   
       }
   
@@ -334,8 +296,6 @@ useEffect(() => {
 
   return (
     <>
-
-
       {/* Map with markers */}
       <View style={styles.container}>
         <MapView 
@@ -386,40 +346,43 @@ useEffect(() => {
 
       {/* Sign-up or Sign-in modal */}
       <Modal
-  animationType="slide"
-  transparent={true}
-  visible={modalVisible}
-  onRequestClose={() => setModalVisible(false)}
->
-  <View style={styles.modalContainer}>
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={() => setModalVisible(false)}
+      >
+      <KeyboardAvoidingView
+          behavior="padding"
+          style={styles.modalContainer}
+      >
     <View style={styles.modalView}>
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
         <Text style={styles.welcomeText}>{isSignUp ? 'Sign Up for BarBuzz' : 'Sign In to BarBuzz'}</Text>
 
-{/* Additional fields for Sign Up only */}
-{isSignUp && (
+        {/* Additional fields for Sign Up only */}
+        {isSignUp && (
           <>
-{/* First Name Input */}
-<View style={styles.inputContainer}>
-          <Text style={styles.inputLabel}>First Name*</Text>
-          <TextInput
-            value={firstName}
-            onChangeText={setFirstName}
-            style={styles.input}
-            placeholder="Your first name"
-          />
-        </View>
+            {/* First Name Input */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>First Name*</Text>
+              <TextInput
+                value={firstName}
+                onChangeText={setFirstName}
+                style={styles.input}
+                placeholder="Your first name"
+              />
+            </View>
 
-        {/* Last Name Input */}
-        <View style={styles.inputContainer}>
-          <Text style={styles.inputLabel}>Last Name*</Text>
-          <TextInput
-            value={lastName}
-            onChangeText={setLastName}
-            style={styles.input}
-            placeholder="Your last name"
-          />
-        </View>
+            {/* Last Name Input */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Last Name*</Text>
+              <TextInput
+                value={lastName}
+                onChangeText={setLastName}
+                style={styles.input}
+                placeholder="Your last name"
+              />
+            </View>
 
             {/* Date of Birth Input */}
             <View style={styles.inputContainer}>
@@ -474,8 +437,9 @@ useEffect(() => {
         </TouchableOpacity>
       </ScrollView>
     </View>
-  </View>
+  </KeyboardAvoidingView>
 </Modal>
+
 
 
 {/* Blank Box Modal when a pin is clicked */}
@@ -610,12 +574,15 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   modalView: {
-    width: 320,
-    padding: 30,
+    width: '75%',
     backgroundColor: '#fff',
-    borderRadius: 15,
-    alignItems: 'center',
-    elevation: 10, // Shadow effect for depth
+    borderRadius: 10,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
   },
   welcomeText: {
     fontSize: 24,
@@ -731,8 +698,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: 'black',
   },
-   scrollViewContent: {
-        padding: 10, // Example styles
-        backgroundColor: 'white', // Example styles
-    },
+  scrollViewContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
 });
