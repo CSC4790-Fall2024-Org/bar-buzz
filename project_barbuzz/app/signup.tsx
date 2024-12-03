@@ -7,7 +7,6 @@ const SplashScreen: React.FC = () => {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      // Redirect to the login screen after 2 seconds
       router.replace("/(tabs)"); // Replace with your login screen route
     }, 2000);
 
@@ -16,25 +15,23 @@ const SplashScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {/* Logo Image */}
       <Image
-        source={require("@/assets/images/BarBuzz2.png")} // Replace with your logo's path
+        source={require("@/assets/images/BarBuzz2.png")}
         style={styles.logo}
       />
     </View>
   );
 };
 
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "white", // Set the background to white
+    backgroundColor: "white",
   },
   logo: {
-    width: 350, // Adjust the size of your logo
+    width: 350,
     height: 350,
   },
 });

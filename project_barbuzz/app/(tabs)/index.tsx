@@ -1,59 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Modal, View, Text, TextInput, StyleSheet, TouchableOpacity, FlatList, Alert } from 'react-native';
+import { KeyboardAvoidingView, AppState, Modal, View, Text, TextInput, StyleSheet, TouchableOpacity, FlatList, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { StatusBar } from 'expo-status-bar';
 import MapView, { Marker, Region } from 'react-native-maps';
 import { collection, getDocs, query, where, addDoc } from 'firebase/firestore';
 import { ScrollView } from 'react-native';
-// Import Firestore and Auth from firebase.js
-// index.tsx
 import { auth, db } from '../config/firebaseConfig.js';
-//import { auth } from '../../../barbuzz-backend/firebaseConfig.js'; // Ensure the path is correct
 import { getAuth, createUserWithEmailAndPassword, sendEmailVerification, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
 import { LogBox } from 'react-native';
 LogBox.ignoreLogs(['@firebase/auth']);
 
-
-//import { auth } from 'firebase/auth';
-//import { auth } from '@/barbuzz-backend/firebaseConfig.js'; 
-//import { createUserWithEmailAndPassword } from 'firebase/auth';
-
-
 let showLocationsOfInterest = [
-  {
-    title: "The Grog Grill",
-    location: {
-      latitude: 40.02257990031775,
-      longitude: -75.32031440725875
-    },
-    description: "Buzz in"
-  },
-  {
-    title: "Kelly's Taproom",
-    location: {
-      latitude: 40.02458,
-      longitude: -75.32429
-    },
-    description: "Buzz in"
-  },
-  {
-    title: "McSorley's",
-    location: {
-      latitude: 39.993037576566806,
-      longitude: -75.29751787647021
-    },
-    description: "Buzz in"
-  },
-  {
-    title: "Flip & Bailey's",
-    location: {
-      latitude: 40.02547645051331,
-      longitude: -75.33737617922777
-    },
-    description: "Buzz in"
-  }
+  { title: "The Grog Grill", location: { latitude: 40.02257990031775, longitude: -75.32031440725875 }, description: "Buzz in" },
+  { title: "Kelly's Taproom", location: { latitude: 40.02458, longitude: -75.32429 }, description: "Buzz in" },
+  { title: "McSorley's", location: { latitude: 39.993037576566806, longitude: -75.29751787647021 }, description: "Buzz in" },
+  { title: "Flip & Bailey's", location: { latitude: 40.02547645051331, longitude: -75.33737617922777 }, description: "Buzz in" }
 ]
 
 type Location = {
@@ -84,7 +47,7 @@ export default function HomeScreen() {
   const [userLocations, setUserLocations] = useState([]);
 
   const onRegionChange = (region: Region) => {
-    console.log(region);
+    //console.log(region);
   };
 
   const moveToLocation = (location: { latitude: number, longitude: number }) => {
@@ -124,7 +87,7 @@ export default function HomeScreen() {
           timestamp: new Date().toISOString()
         });
   
-        Alert.alert('Success', 'Your attendance has been recorded in Firestore!');
+        //Alert.alert('Success', 'Your attendance has been recorded in Firestore!');
       } else {
         Alert.alert('Error', 'Please select an option.');
       }
@@ -243,10 +206,10 @@ useEffect(() => {
           const userData = await fetchUserData(user.uid); // Fetch the user data directly
   
           if (userData && userData.name) {
-            Alert.alert("Success", `Welcome to BarBuzz, ${userData.name}`);
+            //Alert.alert("Success", `Welcome to BarBuzz, ${userData.name}`);
           } else {
             console.log("User data not found or missing name.");
-            Alert.alert("Success", "Welcome to BarBuzz!");
+            //Alert.alert("Success", "Welcome to BarBuzz!");
           }
         } else {
           // Sign out if email is still not verified after retries
@@ -315,8 +278,8 @@ useEffect(() => {
           name,
           email,
           dob: formattedDob,
+          profileIcon:'default',
         });
-        console.log("User data saved to Firestore for UID:", user.uid);
   
       }
   
@@ -332,8 +295,6 @@ useEffect(() => {
 
   return (
     <>
-
-
       {/* Map with markers */}
       <View style={styles.container}>
         <MapView 
@@ -384,40 +345,43 @@ useEffect(() => {
 
       {/* Sign-up or Sign-in modal */}
       <Modal
-  animationType="slide"
-  transparent={true}
-  visible={modalVisible}
-  onRequestClose={() => setModalVisible(false)}
->
-  <View style={styles.modalContainer}>
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={() => setModalVisible(false)}
+      >
+      <KeyboardAvoidingView
+          behavior="padding"
+          style={styles.modalContainer}
+      >
     <View style={styles.modalView}>
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
         <Text style={styles.welcomeText}>{isSignUp ? 'Sign Up for BarBuzz' : 'Sign In to BarBuzz'}</Text>
 
-{/* Additional fields for Sign Up only */}
-{isSignUp && (
+        {/* Additional fields for Sign Up only */}
+        {isSignUp && (
           <>
-{/* First Name Input */}
-<View style={styles.inputContainer}>
-          <Text style={styles.inputLabel}>First Name*</Text>
-          <TextInput
-            value={firstName}
-            onChangeText={setFirstName}
-            style={styles.input}
-            placeholder="Your first name"
-          />
-        </View>
+            {/* First Name Input */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>First Name*</Text>
+              <TextInput
+                value={firstName}
+                onChangeText={setFirstName}
+                style={styles.input}
+                placeholder="Your first name"
+              />
+            </View>
 
-        {/* Last Name Input */}
-        <View style={styles.inputContainer}>
-          <Text style={styles.inputLabel}>Last Name*</Text>
-          <TextInput
-            value={lastName}
-            onChangeText={setLastName}
-            style={styles.input}
-            placeholder="Your last name"
-          />
-        </View>
+            {/* Last Name Input */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Last Name*</Text>
+              <TextInput
+                value={lastName}
+                onChangeText={setLastName}
+                style={styles.input}
+                placeholder="Your last name"
+              />
+            </View>
 
             {/* Date of Birth Input */}
             <View style={styles.inputContainer}>
@@ -472,8 +436,9 @@ useEffect(() => {
         </TouchableOpacity>
       </ScrollView>
     </View>
-  </View>
+  </KeyboardAvoidingView>
 </Modal>
+
 
 
 {/* Blank Box Modal when a pin is clicked */}
@@ -485,59 +450,51 @@ useEffect(() => {
 >
   <View style={styles.modalContainer}>
     <View style={styles.blankBox}>
-      {/* Close Button */}
-      <TouchableOpacity style={styles.closeButton} onPress={() => setPinModalVisible(false)}>
-        <Text style={styles.closeButtonText}>X</Text>
-      </TouchableOpacity>
+      {/* Title at the top */}
+      <View style={styles.titleContainer}>
+        <Text style={styles.modalTitle}>Buzz In!</Text>
+        <TouchableOpacity style={styles.closeButton} onPress={() => setPinModalVisible(false)}>
+          <Text style={styles.closeButtonText}>X</Text>
+        </TouchableOpacity>
+      </View>
 
-      {/* Container for Questions */}
+      {/* Questions */}
       <View style={styles.questionsStack}>
-        {/* Question 1: Are you currently here? */}
         <View style={styles.questionContainer}>
           <Text style={styles.questionText}>Are you currently here?</Text>
           <TouchableOpacity 
-          style={[styles.radioCircle, currentlyHere && styles.selectedRadioCircle]} 
-          onPress={() => {
-          if (currentlyHere) {
-            setCurrentlyHere(false);  // Clear if already selected
-          } else {
-            setCurrentlyHere(true);
-            setPlanningToAttend(false);  // Ensure only one option is selected
-          }
-        }}
-      />
+            style={[styles.radioCircle, currentlyHere && styles.selectedRadioCircle]} 
+            onPress={() => {
+              setCurrentlyHere(!currentlyHere);
+              if (!currentlyHere) setPlanningToAttend(false); // Deselect the other option
+            }}
+          />
+        </View>
+        <View style={styles.questionContainer}>
+          <Text style={styles.questionText}>Are you planning to attend?</Text>
+          <TouchableOpacity 
+            style={[styles.radioCircle, planningToAttend && styles.selectedRadioCircle]} 
+            onPress={() => {
+              setPlanningToAttend(!planningToAttend);
+              if (!planningToAttend) setCurrentlyHere(false); // Deselect the other option
+            }}
+          />
+        </View>
       </View>
 
-      {/* Question 2: Are you planning to attend? */}
-      <View style={styles.questionContainer}>
-      <Text style={styles.questionText}>Are you planning to attend?</Text>
-  <TouchableOpacity 
-    style={[styles.radioCircle, planningToAttend && styles.selectedRadioCircle]} 
-    onPress={() => {
-      if (planningToAttend) {
-        setPlanningToAttend(false);  // Clear if already selected
-      } else {
-        setPlanningToAttend(true);
-        setCurrentlyHere(false);  // Ensure only one option is selected
-      }
-    }}
-  />
-</View>
-</View>
-
-
-
-      {/* "Buzzed" Button */}
-      <TouchableOpacity 
-        style={styles.buzzedButton} 
-        onPress={handleBuzzedSubmit} // Handler for submission
+      {/* Submit Button */}
+      <TouchableOpacity
+        style={styles.submitButton}
+        onPress={handleBuzzedSubmit}
         disabled={!currentlyHere && !planningToAttend} // Disable if no option is selected
       >
-        <Text style={styles.buzzedButtonText}>Buzzed</Text>
+        <Text style={styles.submitButtonText}>Submit</Text>
       </TouchableOpacity>
     </View>
   </View>
 </Modal>
+
+
     </>
   );
 }
@@ -549,35 +506,33 @@ const styles = StyleSheet.create({
     width: 20,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: '#1E90FF',  // Circle border color
-    alignItems: 'center',
+    borderColor: 'black',
     justifyContent: 'center',
-    marginLeft: 10,
+    alignItems: 'center',
   },
   selectedRadioCircle: {
-    backgroundColor: '#1E90FF', // Circle fill when selected
+    backgroundColor: '#1E90FF',
   },
   questionContainer: {
-    width: '100%',
-    flexDirection: 'row', // Align question text and circle
-    justifyContent: 'space-between', // Space between text and circle
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 15, 
-    marginTop: 15,
+    marginBottom: 15,
   },
   buzzedButton: {
-    backgroundColor: '#6FCF97', // Green color for the button
+    backgroundColor: '#6FCF97',
     padding: 15,
-    borderRadius: 5,
-    width: '80%', // Width of the button
+    borderRadius: 8,
+    width: '85%',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 20,
+    marginTop: 25,
+    opacity: 0.8, // Slight opacity for a more modern look
   },
   buzzedButtonText: {
     color: 'white',
     fontWeight: 'bold',
-    fontSize: 16,
+    fontSize: 18,
   },
   container: {
     flex: 1, 
@@ -599,10 +554,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   questionsStack: {
-    flexDirection: 'column', // Stack questions vertically
-    alignItems: 'center', // Center questions horizontally
-    justifyContent: 'center', // Center questions vertically within the stack
-    width: '100%', // Take full width of blank box
+    marginBottom: 20,
   },
   listItem: {
     fontSize: 16,
@@ -613,14 +565,23 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Dark background to make modal stand out
+  },
+  modalContent: {
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    width: '100%',
   },
   modalView: {
-    width: 300,
-    padding: 20,
-    backgroundColor: 'white',
+    width: '75%',
+    backgroundColor: '#fff',
     borderRadius: 10,
-    alignItems: 'center',
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
   },
   welcomeText: {
     fontSize: 24,
@@ -652,20 +613,20 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     backgroundColor: '#6FCF97',
-    padding: 15,
+    paddingVertical: 10,
     borderRadius: 5,
-    width: '100%',
     alignItems: 'center',
   },
   submitButtonText: {
+    fontSize: 16,
     color: 'white',
     fontWeight: 'bold',
-    fontSize: 16,
   },
   titleContainer: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 8,
+    marginBottom: 20,
   },
   stepContainer: {
     gap: 8,
@@ -679,12 +640,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   questionText: {
-    flex: 1, // Allow the text to take up available space
-   // fontSize: 15,
-    textAlign: 'left', // Align text to the left
-    //marginRight: 5, // Space between text and button
-    fontWeight: 'bold',
-    marginRight:10,
+    fontSize: 16,
+    color: 'black',
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -707,14 +664,18 @@ const styles = StyleSheet.create({
     textAlign: 'center', // Ensure text is centered
     //lineHeight: 40,
   },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
   blankBox: {
     width: 300,
-    //height: 150,
     padding: 20,
     backgroundColor: 'white',
     borderRadius: 10,
-    justifyContent: 'center', 
-    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'black',
+    alignItems: 'stretch', // Stretch content to align title and questions
   },
   yesButton: {
     backgroundColor: '#1E90FF',
@@ -727,17 +688,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center', // Center the text vertically
   },
   closeButton: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    //padding: 5, // Add padding to make it clickable
+    backgroundColor: 'white',
+    padding: 5,
+    borderRadius: 50,
   },
   closeButtonText: {
-    fontSize: 24, // Make the "X" larger
-    color: 'black', // Set the color for the "X"
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: 'black',
   },
-   scrollViewContent: {
-        padding: 10, // Example styles
-        backgroundColor: 'white', // Example styles
-    },
+  scrollViewContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
 });

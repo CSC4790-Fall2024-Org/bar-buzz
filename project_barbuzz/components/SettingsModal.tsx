@@ -1,5 +1,13 @@
 import React from 'react';
-import { Modal, View, Text, Button, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import {
+  Modal,
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons'; // Import for icons
 import { getAuth, signOut, sendPasswordResetEmail } from 'firebase/auth';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -9,23 +17,23 @@ interface SettingsModalProps {
   onClose: () => void;
 }
 
-const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }) => {
-  const router = useRouter(); // Initialize router
-  const auth = getAuth(); // Firebase auth instance
+const SettingsModal: React.FC<SettingsModalProps> = ({
+  visible,
+  onClose,
+}) => {
+  const router = useRouter();
+  const auth = getAuth();
 
   const handleLogout = async () => {
     try {
-      await signOut(auth); // Log out from Firebase
-      await AsyncStorage.clear(); // Clear stored user data
-  
-      Alert.alert("Logged Out", "You have been successfully logged out.");
-      onClose(); // Close the modal
-  
-      // Redirect to sign-in page
-      router.replace("/signup");
+      await signOut(auth);
+      await AsyncStorage.clear();
+      Alert.alert('Logged Out', 'You have been successfully logged out.');
+      onClose();
+      router.replace('/signup');
     } catch (error) {
-      console.error("Logout error: ", error);
-      Alert.alert("Logout Error", "An error occurred during logout.");
+      console.error('Logout error: ', error);
+      Alert.alert('Logout Error', 'An error occurred during logout.');
     }
   };
 
@@ -33,14 +41,17 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }) => {
     const user = auth.currentUser;
     if (user) {
       try {
-        await sendPasswordResetEmail(auth, user.email!); // Send password reset email
-        Alert.alert("Password Reset", "A password reset email has been sent.");
+        await sendPasswordResetEmail(auth, user.email!);
+        Alert.alert('Password Reset', 'A password reset email has been sent.');
       } catch (error) {
-        console.error("Password reset error: ", error);
-        Alert.alert("Password Reset Error", "An error occurred while sending the password reset email.");
+        console.error('Password reset error: ', error);
+        Alert.alert(
+          'Password Reset Error',
+          'An error occurred while sending the password reset email.'
+        );
       }
     } else {
-      Alert.alert("User Not Found", "No user is currently logged in.");
+      Alert.alert('User Not Found', 'No user is currently logged in.');
     }
   };
 
@@ -54,16 +65,30 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }) => {
       <View style={styles.modalBackground}>
         <View style={styles.modalContainer}>
           <Text style={styles.modalTitle}>Settings</Text>
-          {/* Log Out Button */}
-          <TouchableOpacity style={styles.button} onPress={handleLogout}>
-            <Text style={styles.buttonText}>Log Out</Text>
+
+          {/* Menu Options */}
+          <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
+            <View style={styles.menuItemContent}>
+              <Ionicons name="log-out-outline" size={24} color="#333" />
+              <Text style={styles.menuItemText}>Log Out</Text>
+            </View>
+            <Ionicons name="chevron-forward-outline" size={20} color="#aaa" />
           </TouchableOpacity>
-          {/* Reset Password Button */}
-          <TouchableOpacity style={styles.button} onPress={handlePasswordReset}>
-            <Text style={styles.buttonText}>Reset Password</Text>
+
+          <TouchableOpacity style={styles.menuItem} onPress={handlePasswordReset}>
+            <View style={styles.menuItemContent}>
+              <Ionicons name="lock-closed-outline" size={24} color="#333" />
+              <Text style={styles.menuItemText}>Reset Password</Text>
+            </View>
+            <Ionicons name="chevron-forward-outline" size={20} color="#aaa" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Text style={styles.closeButtonText}>Close</Text>
+
+          <TouchableOpacity style={styles.menuItem} onPress={onClose}>
+            <View style={styles.menuItemContent}>
+              <Ionicons name="close-outline" size={24} color="#333" />
+              <Text style={styles.menuItemText}>Close</Text>
+            </View>
+            <Ionicons name="chevron-forward-outline" size={20} color="#aaa" />
           </TouchableOpacity>
         </View>
       </View>
@@ -79,48 +104,35 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent background
   },
   modalContainer: {
-    width: 320,
-    padding: 30,
+    width: '90%',
     backgroundColor: 'white',
     borderRadius: 15,
-    alignItems: 'center',
-    elevation: 5, // Adds a subtle shadow to lift the modal
+    padding: 20,
+    elevation: 10, // Subtle shadow for elevation
   },
   modalTitle: {
     fontSize: 24,
     fontWeight: '600',
-    marginBottom: 30,
+    marginBottom: 20,
+    textAlign: 'center',
     color: '#333',
   },
-  button: {
-    backgroundColor: '#4CAF50', // Modern green color
-    paddingVertical: 12,
-    paddingHorizontal: 25,
-    borderRadius: 8,
-    marginVertical: 12,
-    width: '100%',
+  menuItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    justifyContent: 'center',
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
-  buttonText: {
-    color: 'white',
+  menuItemContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  menuItemText: {
     fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  closeButton: {
-    backgroundColor: '#FF6347', // Red color for close button
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    marginTop: 10,
-    width: '100%',
-    alignItems: 'center',
-  },
-  closeButtonText: {
-    color: 'white',
-    fontSize: 16,
-    textAlign: 'center',
+    marginLeft: 15,
+    color: '#333',
   },
 });
 

@@ -1,21 +1,34 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Image, ScrollView, Dimensions, ActivityIndicator, Button, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Image, ScrollView, Dimensions, ActivityIndicator, Button, TouchableOpacity, Modal, Text, } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import * as Progress from 'react-native-progress';
 import { getAuth } from 'firebase/auth';
-import { getFirestore, collection, query, where, onSnapshot, doc, getDoc } from 'firebase/firestore';
+import { getFirestore, collection, query, where, onSnapshot, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { getStorage, ref, getDownloadURL, uploadBytes } from 'firebase/storage';
-//import * as ImagePicker from 'expo-image-picker';
 
 
 const screenWidth = Dimensions.get('window').width;
 
+const profileIcons = [
+  require('@/assets/images/beer.png'),
+  require('@/assets/images/juice.png'),
+  require('@/assets/images/martini.png'),
+  require('@/assets/images/wine.png'),
+];
+
+const defaultProfilePhotoUrl = Image.resolveAssetSource(
+  require('@/assets/images/usericon.png')
+).uri;
+
+
 
 export default function HomeScreen() {
   const [name, setName] = useState('');
-  const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState<string>(defaultProfilePhotoUrl);
   const [loading, setLoading] = useState(true);
+  const [isModalVisible, setModalVisible] = useState(false);
+  const [showIconSelector, setShowIconSelector] = useState(false);
   const [visits, setVisits] = useState([
     { name: "The Grog Grill", visits: 0 },
     { name: "Kelly's Taproom", visits: 0 },
@@ -31,30 +44,27 @@ export default function HomeScreen() {
     const auth = getAuth();
     const firestore = getFirestore();
     const user = auth.currentUser;
-
-
+  
     if (user) {
       try {
         console.log('Fetching user profile data...');
         const userDocRef = doc(firestore, 'users', user.uid);
         const userDoc = await getDoc(userDocRef);
+  
         if (userDoc.exists()) {
           const userData = userDoc.data();
           setName(userData.name || '');
-          // const storage = getStorage();
-          // const photoRef = ref(storage, `profilePhotos/${user.uid}`);
-          // const photoUrl = await getDownloadURL(photoRef);
-          // setProfilePhotoUrl(photoUrl);
-          // console.log('User profile photo URL set:', photoUrl);
-          if (userData.profilePhotoUrl) {
-            setProfilePhotoUrl(userData.profilePhotoUrl);
-            console.log('User profile photo URL set:', userData.profilePhotoUrl);
+        
+          if (userData.profileIcon) {
+            const iconIndex = parseInt(userData.profileIcon.replace('icon', ''), 10) - 1;
+            setProfilePhotoUrl(Image.resolveAssetSource(profileIcons[iconIndex] || require('@/assets/images/usericon.png')).uri);
+          } else {
+            setProfilePhotoUrl(Image.resolveAssetSource(require('@/assets/images/usericon.png')).uri);
           }
-          console.log('User name set:', userData.name);
         } else {
-          console.log('User profile document not found.');
           setName('Unknown User');
         }
+        
       } catch (error) {
         console.error('Error fetching user profile:', error);
         setName('Error Loading Name');
@@ -62,42 +72,46 @@ export default function HomeScreen() {
     }
   };
 
+  useEffect(() => {
+    setProfilePhotoUrl(defaultProfilePhotoUrl);
+  }, []);
 
-  // const handleProfilePhotoUpload = async () => {
-  //   const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-  //   if (status !== 'granted') {
-  //     alert('Permission to access camera roll is required!');
-  //     return;
-  //   }
-
-
-  //   const result = await ImagePicker.launchImageLibraryAsync({
-  //     mediaTypes: ImagePicker.MediaTypeOptions.Images,
-  //     allowsEditing: true,
-  //     aspect: [1, 1],
-  //     quality: 1,
-  //   });
-
-
-  //   if (!result.canceled) {
-  //     const auth = getAuth();
-  //     const user = auth.currentUser;
-  //     const storage = getStorage();
-
-
-  //     if (user && result.assets[0].uri) {
-  //       const response = await fetch(result.assets[0].uri);
-  //       const blob = await response.blob();
-
-
-  //       const photoRef = ref(storage, `profilePhotos/${user.uid}`);
-  //       await uploadBytes(photoRef, blob);
-  //       const photoUrl = await getDownloadURL(photoRef);
-  //       setProfilePhotoUrl(photoUrl);
-  //       console.log('Profile photo uploaded:', photoUrl);
-  //     }
-  //   }
-  // };
+  const handleIconSelect = async (iconIndex: number | null) => {
+    const auth = getAuth();
+    const firestore = getFirestore();
+    const user = auth.currentUser;
+  
+    if (user) {
+      try {
+        if (iconIndex !== null) {
+          // Store the selected icon index or identifier
+          const selectedIcon = `icon${iconIndex + 1}`;
+          const userDocRef = doc(firestore, 'users', user.uid);
+          await updateDoc(userDocRef, {
+            profileIcon: selectedIcon,
+          });
+  
+          // Optionally update state for UI feedback
+          setProfilePhotoUrl(Image.resolveAssetSource(profileIcons[iconIndex]).uri);
+        } else {
+          // Reset to default icon
+          const defaultIcon = 'default';
+          const userDocRef = doc(firestore, 'users', user.uid);
+          await updateDoc(userDocRef, {
+            profileIcon: defaultIcon,
+          });
+  
+          setProfilePhotoUrl(Image.resolveAssetSource(require('@/assets/images/usericon.png')).uri);
+        }
+  
+        setShowIconSelector(false);
+      } catch (error) {
+        console.error('Error updating profile icon:', error);
+      }
+    }
+  };
+  
+  
 
 
   useEffect(() => {
@@ -107,13 +121,15 @@ export default function HomeScreen() {
   
     if (user) {
       console.log('User is signed in:', user.uid);
-  
-      // Real-time listener for tracking data
+
+      fetchProfileData();
+
       const trackingQuery = query(
         collection(firestore, 'tracking'),
         where('userId', '==', user.uid)
       );
-  
+
+
       const unsubscribe = onSnapshot(
         trackingQuery,
         (snapshot) => {
@@ -183,14 +199,16 @@ export default function HomeScreen() {
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.container}>
         <View style={styles.header}>
-          <Image
-            source={
-              profilePhotoUrl
-                ? { uri: profilePhotoUrl }
-                : require('@/assets/images/usericon.png')
+        <TouchableOpacity onPress={() => setShowIconSelector(true)}>
+        <Image
+          source={
+            profilePhotoUrl
+            ? { uri: profilePhotoUrl }
+            : require('@/assets/images/usericon.png')
             }
-            style={styles.logo}
-          />
+          style={styles.logo}
+        />
+          </TouchableOpacity>
           <View style={styles.headerTextContainer}>
             <ThemedText type="title" style={styles.name}>
               {name}
@@ -200,6 +218,28 @@ export default function HomeScreen() {
             </ThemedText>
           </View>
         </View>
+
+        {showIconSelector && (
+  <View style={styles.iconSelectorContainer}>
+    <View style={styles.iconSelector}>
+      {profileIcons.map((icon, index) => (
+        <TouchableOpacity
+          key={index}
+          onPress={() => handleIconSelect(index)}
+        >
+          <Image source={icon} style={styles.icon} />
+        </TouchableOpacity>
+      ))}
+    </View>
+    {/* Cancel Button */}
+    <TouchableOpacity
+      onPress={() => handleIconSelect(null)}
+      style={styles.cancelButton}
+    >
+      <Text style={styles.cancelButtonText}>Cancel</Text>
+    </TouchableOpacity>
+  </View>
+)}
 
         <ThemedView style={styles.contentContainer}>
   <ThemedText type="title" style={styles.recapTitle}>Monthly Recap</ThemedText>
@@ -343,5 +383,30 @@ const styles = StyleSheet.create({
   },
   progressBar: {
     alignSelf: 'center',
+  },
+  iconSelector: {
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+    marginVertical: 0,
+  },
+  icon: {
+    width: 80,
+    height: 80,
+  },
+  iconSelectorContainer: {
+    alignItems: 'center',
+    marginVertical: 0,
+  },
+  cancelButton: {
+    marginTop: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: '#d3d3d3',
+    borderRadius: 8,
+  },
+  cancelButtonText: {
+    color: '#333',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });

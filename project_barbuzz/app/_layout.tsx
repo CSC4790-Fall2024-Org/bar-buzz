@@ -37,17 +37,22 @@ export default function RootLayout() {
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <SafeAreaView style={{ flex: 1 }}>
         <Stack>
-          {/* Hide header for (tabs) */}
+          {/* Main (tabs) navigation */}
           <Stack.Screen
-          name="(tabs)"
-          options={{
-            headerShown: false, // Hides the header completely
-            title: 'Bars', // Optional: Sets a blank title if the header is shown elsewhere
-          }}
-        />
-          {/* Define other screens with headers */}
-          { /* <Stack.Screen name="detail" options={{ title: 'Friends' }} />*/}
-          { /* <Stack.Screen name="+not-found" options={{ headerShown: false }} />  */}
+            name="(tabs)"
+            options={{
+              headerShown: false, // Hides the header completely for tabs
+            }}
+          />
+          {/* Signup screen */}
+          <Stack.Screen
+            name="signup"
+            options={{
+              headerShown: false, // Hides the header for the signup screen
+            }}
+          />
+          {/* Other screens can have headers if needed */}
+          { /* Example: <Stack.Screen name="detail" options={{ title: 'Friends' }} /> */}
         </Stack>
       </SafeAreaView>
     </ThemeProvider>
@@ -67,7 +72,3 @@ const styles = StyleSheet.create({
     resizeMode: 'contain', // Ensures the logo maintains its aspect ratio
   },
 });
-
-
-
-
