@@ -4,7 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const admin = require('firebase-admin');  // Add Firebase Admin SDK
-
+const functions = require('firebase-functions');
 const app = express();
 const PORT = 8082;
 
@@ -18,7 +18,6 @@ app.use(bodyParser.json());
 
 // Initialize Firebase Admin SDK
 const serviceAccount = require('./barbuzz-29b1a-firebase-adminsdk-srfma-75e610b615.json');  // Path to your service account JSON file
-
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
 });
@@ -58,7 +57,7 @@ app.post('/buzzed', async (req, res) => {
       userId,
       currentlyHere,
       planningToAttend,
-      timestamp,
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
       location // Now location is defined as part of req.body
     });
 
@@ -120,6 +119,88 @@ app.get('/user/:userId', async (req, res) => {
     return res.status(500).json({ error: 'An error occurred while fetching user data.' });
   }
 });
+
+/*
+// Schedule the clear-daily-submissions endpoint to run at a specific time
+const scheduleClearSubmissions = () => {
+  const now = new Date();
+  const targetTime = new Date().setHours(11, 22, 0, 0); // 11:00 AM
+  const millisUntilTargetTime = targetTime - now.getTime();
+
+  console.log(`Current time: ${now}`);
+  console.log(`Target time (11:00 AM): ${new Date(targetTime)}`);
+  console.log(`Milliseconds until target time: ${millisUntilTargetTime}`);
+
+  if (millisUntilTargetTime > 0) {
+    console.log(`Scheduled to trigger at 11:00 AM in ${millisUntilTargetTime / 1000} seconds`);
+    setTimeout(() => {
+      console.log('Triggering /clear-daily-submissions POST request...');
+      fetch('http://localhost:8082/clear-daily-submissions', { method: 'POST' })
+        .then((res) => res.json())
+        .then((data) => console.log('Clear daily submissions response:', data))
+        .catch((err) => console.error('Error triggering clearing logic:', err));
+
+      // Set interval to repeat daily
+      setInterval(() => {
+        console.log('Triggering daily /clear-daily-submissions POST request...');
+        fetch('http://localhost:8082/clear-daily-submissions', { method: 'POST' })
+          .then((res) => res.json())
+          .then((data) => console.log('Clear daily submissions response:', data))
+          .catch((err) => console.error('Error triggering clearing logic:', err));
+      }, 24 * 60 * 60 * 1000); // Every 24 hours
+    }, millisUntilTargetTime);
+  } else {
+    console.log('Missed today’s target time. Will schedule for tomorrow.');
+  }
+};
+
+scheduleClearSubmissions();
+
+// Route to reset daily submissions
+app.post('/clear-daily-submissions', async (req, res) => {
+  try {
+    console.log('Archiving and resetting daily submissions...');
+    const trackingRef = db.collection('tracking');
+    const historicalTrackingRef = db.collection('historicalTracking');
+
+    const snapshot = await trackingRef.get();
+    if (snapshot.empty) {
+      console.log('No documents found for reset.');
+      return res.status(200).json({ message: 'No records to reset.' });
+    }
+
+    const batch = db.batch();
+    let updateCount = 0;
+
+    snapshot.forEach((doc) => {
+      const docData = doc.data();
+      console.log('Archiving document:', docData); // Debug log
+
+      // Archive to historicalTracking
+      const historicalDocRef = historicalTrackingRef.doc();
+      batch.set(historicalDocRef, {
+        ...docData,
+        archivedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      // Reset real-time fields in tracking
+      batch.update(doc.ref, {
+        currentlyHere: false,
+        planningToAttend: false, // Make sure to reset planningToAttend as well
+      });
+
+      updateCount++;
+    });
+
+    await batch.commit();
+    console.log(`Daily submissions archived and reset successfully for ${updateCount} documents.`);
+    res.status(200).json({ message: `Daily submissions archived and reset successfully for ${updateCount} records.` });
+  } catch (error) {
+    console.error('Error during reset:', error);
+    res.status(500).json({ error: 'An error occurred during reset.' });
+  }
+});
+*/
 
 // Start the server
 app.listen(PORT, () => {

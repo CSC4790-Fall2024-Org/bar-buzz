@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, TouchableOpacity, Image, View, Modal, Text, Animated } from 'react-native';
+import { StyleSheet, TouchableOpacity, Image, View, Modal, Text } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ThemedText } from '@/components/ThemedText';
@@ -34,31 +34,49 @@ const TabTwoScreen: React.FC = () => {
   const [peopleCount, setPeopleCount] = useState<{ [key: string]: { planning: number; currentlyHere: number; total: number } }>({});
   const [showBuzzInModal, setShowBuzzInModal] = useState(false);
   const countsRef = useRef<{ [key: string]: { planning: number; currentlyHere: number } }>({});
+  const unsubscribeRef = useRef<{ [key: string]: () => void }>({});
+  const [resetTimestamp, setResetTimestamp] = useState<number | null>(null);
 
   useEffect(() => {
     navigation.setOptions({ title: 'Bars' });
   }, [navigation]);
 
+  const updatePeopleCount = (barName: string) => {
+    const { planning, currentlyHere } = countsRef.current[barName];
+    console.log(`Updated counts for ${barName}: Planning: ${planning}, Currently Here: ${currentlyHere}`);
+    setPeopleCount((prev) => ({
+      ...prev,
+      [barName]: {
+        planning,
+        currentlyHere,
+        total: planning + currentlyHere,
+      },
+    }));
+  };
+
   useEffect(() => {
-    const fetchPeopleCount = () => {
+    // Unsubscribe existing listeners before setting up new ones
+    const unsubscribeAll = () => {
+      Object.keys(countsRef.current).forEach((barName) => {
+        const unsubscribe = unsubscribeRef.current[barName];
+        if (unsubscribe) {
+          unsubscribe();
+        }
+      });
+    };
+
+    const setupListeners = () => {
       const trackingCollection = collection(db, 'tracking');
 
       DATA.forEach((item) => {
         const barName = item.name;
         countsRef.current[barName] = { planning: 0, currentlyHere: 0 };
 
-        const planningQuery = query(
-          trackingCollection,
-          where("location.title", "==", barName),
-          where("planningToAttend", "==", true)
-        );
+        // Queries for planning to attend and currently here
+        const planningQuery = query(trackingCollection, where("location.title", "==", barName), where("planningToAttend", "==", true));
+        const currentlyHereQuery = query(trackingCollection, where("location.title", "==", barName), where("currentlyHere", "==", true));
 
-        const currentlyHereQuery = query(
-          trackingCollection,
-          where("location.title", "==", barName),
-          where("currentlyHere", "==", true)
-        );
-
+        // Setting up listeners
         const unsubscribePlanning = onSnapshot(planningQuery, (snapshot) => {
           const planningCount = snapshot.size;
           countsRef.current[barName].planning = planningCount;
@@ -71,34 +89,71 @@ const TabTwoScreen: React.FC = () => {
           updatePeopleCount(barName);
         });
 
-        return () => {
+        // Store the unsubscribe functions
+        unsubscribeRef.current[barName] = () => {
           unsubscribePlanning();
           unsubscribeCurrentlyHere();
         };
       });
     };
 
-    const updatePeopleCount = (barName: string) => {
-      const { planning, currentlyHere } = countsRef.current[barName];
-      setPeopleCount((prev) => ({
-        ...prev,
-        [barName]: {
-          planning,
-          currentlyHere,
-          total: planning + currentlyHere,
-        },
-      }));
+    unsubscribeAll(); // Unsubscribe before setting up new listeners
+    setupListeners(); // Set up new listeners
+
+    // Cleanup function for when component unmounts or resetTimestamp changes
+    return () => {
+      unsubscribeAll();
     };
+  }, [resetTimestamp]);
 
-    fetchPeopleCount();
-  }, []);
+  const triggerReset = async () => {
+    try {
+      // Call the backend API to reset daily submissions
+      const response = await fetch('http://localhost:8082/clear-daily-submissions', { method: 'POST' });
+      const data = await response.json();
+      console.log('Reset triggered successfully:', data);
+  
+      // After resetting in Firestore, manually update the counts in the component
+      const trackingCollection = collection(db, 'tracking');
+      const updatedSnapshot = await getDocs(trackingCollection);
+  
+      updatedSnapshot.forEach(doc => {
+        const barName = doc.data().location.title;
+        const { planningToAttend, currentlyHere } = doc.data();
+  
+        // Update the counts to ensure planningToAttend is properly reflected
+        countsRef.current[barName] = {
+          planning: planningToAttend ? 0 : 0, // Setting to 0 after reset
+          currentlyHere: currentlyHere ? 1 : 0
+        };
+        updatePeopleCount(barName);
+      });
+  
+      // Update the reset timestamp to trigger a re-run of useEffect
+      setResetTimestamp(Date.now());
+  
+    } catch (error) {
+      //console.error('Error triggering reset:', error);
+    }
+  };
+  
+  useEffect(() => {
+    const initialize = async () => {
+      await triggerReset(); // Trigger the reset on component mount
+    };
+  
+    initialize();
+  }, []);  
+  
 
-  const fetchUserStatus = async () => {
+  const handlePress = async (item: Item) => {
     const auth = getAuth();
     const currentUserId = auth.currentUser?.uid;
 
     if (!currentUserId) {
-      return { currentlyHere: false, planningToAttend: false };
+      console.log('No user is signed in.');
+      setShowBuzzInModal(true);
+      return;
     }
 
     const trackingCollection = collection(db, 'tracking');
@@ -106,28 +161,30 @@ const TabTwoScreen: React.FC = () => {
     const userSnapshot = await getDocs(userQuery);
 
     if (userSnapshot.empty) {
-      return { currentlyHere: false, planningToAttend: false };
-    }
-
-    const userData = userSnapshot.docs[0].data();
-    return {
-      currentlyHere: userData.currentlyHere,
-      planningToAttend: userData.planningToAttend,
-    };
-  };
-
-  const handlePress = async (item: Item) => {
-    const userStatus = await fetchUserStatus();
-
-    if (!userStatus.currentlyHere && !userStatus.planningToAttend) {
+      console.log('No logs found for the user. Showing modal.');
       setShowBuzzInModal(true);
       return;
     }
 
-    router.push({
-      pathname: routePaths[item.name] || "/detail",
-      params: { barName: item.name },
+    // Check if the user has logged "currentlyHere" or "planningToAttend" for today
+    let hasLogged = false;
+    userSnapshot.docs.forEach((doc) => {
+      const data = doc.data();
+      if (data.currentlyHere || data.planningToAttend) {
+        hasLogged = true;
+      }
     });
+
+    if (!hasLogged) {
+      console.log('User has not logged attendance for today. Showing modal.');
+      setShowBuzzInModal(true);
+    } else {
+      console.log(`User has logged attendance. Navigating to ${item.name}`);
+      router.push({
+        pathname: routePaths[item.name] || "/detail",
+        params: { barName: item.name },
+      });
+    }
   };
 
   const renderItem = ({ item }: { item: Item }) => {
@@ -209,8 +266,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     color: 'white',
-    //backgroundColor: 'white',
-
   },
   item: {
     fontSize: 22,
@@ -220,7 +275,6 @@ const styles = StyleSheet.create({
   peopleCount: {
     fontSize: 18,
     color: 'white',
-    //backgroundColor: 'white',
   },
   headerContainer: {
     alignItems: 'center',
@@ -236,14 +290,12 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 21,
-    //color: 'gray',
     marginTop: 5,
   },
   BBlogo: {
     height: 200,
     width: 200,
     resizeMode: 'contain',
-    //marginBottom: 20,
   },
   BBlogo2: {
     height: 150,

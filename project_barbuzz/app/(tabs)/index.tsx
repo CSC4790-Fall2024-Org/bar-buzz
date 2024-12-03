@@ -201,7 +201,7 @@ useEffect(() => {
 
   enforceEmailVerification();
 }, []);  
-  
+
 
   const handleDobChange = (input: string) => {
     const cleaned = input.replace(/[^\d]/g, '');
@@ -214,7 +214,6 @@ useEffect(() => {
     }
     setDob(formatted);
   };
-
 
   const handleSignIn = async () => {
     try {

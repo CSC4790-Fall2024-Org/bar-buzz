@@ -104,29 +104,21 @@ export default function HomeScreen() {
     const auth = getAuth();
     const firestore = getFirestore();
     const user = auth.currentUser;
-
-
+  
     if (user) {
       console.log('User is signed in:', user.uid);
-
-
-      // Call fetchProfileData to load the user profile
-      fetchProfileData();
-
-
+  
       // Real-time listener for tracking data
       const trackingQuery = query(
         collection(firestore, 'tracking'),
         where('userId', '==', user.uid)
       );
-
-
+  
       const unsubscribe = onSnapshot(
         trackingQuery,
         (snapshot) => {
           console.log('Snapshot received. Docs count:', snapshot.docs.length);
-
-
+  
           const visitsData = snapshot.docs.map((doc) => {
             const visit = doc.data() as { location: { title: string } };
             return {
@@ -134,8 +126,7 @@ export default function HomeScreen() {
               visits: 1,
             };
           });
-
-
+  
           const aggregatedVisits = visitsData.reduce<{ name: string; visits: number }[]>(
             (acc, visit) => {
               const existingIndex = acc.findIndex(item => item.name === visit.name);
@@ -148,8 +139,7 @@ export default function HomeScreen() {
             },
             []
           );
-
-
+  
           const updatedVisits = [
             { name: "The Grog Grill", visits: 0 },
             { name: "Kelly's Taproom", visits: 0 },
@@ -159,8 +149,8 @@ export default function HomeScreen() {
             const match = aggregatedVisits.find(item => item.name === bar.name);
             return match ? { ...bar, visits: match.visits } : bar;
           });
-
-
+  
+          console.log('Updated visits:', updatedVisits);
           setVisits(updatedVisits);
           setLoading(false);
         },
@@ -169,8 +159,7 @@ export default function HomeScreen() {
           setLoading(false);
         }
       );
-
-
+  
       return () => {
         console.log('Unsubscribing from snapshot listener');
         unsubscribe();
@@ -179,7 +168,7 @@ export default function HomeScreen() {
       console.log('No user is signed in.');
       setLoading(false);
     }
-  }, []);
+  }, []);    
 
 
   const totalVisits = visits.reduce((acc, place) => acc + place.visits, 0);
