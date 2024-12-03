@@ -15,9 +15,13 @@ const DetailScreen: React.FC = () => {
 
   useLayoutEffect(() => {
     if (barName) {
-      navigation.setOptions({ title: `People at ${barName}` });
+      navigation.setOptions({
+        title: `People at ${barName}`,
+        headerBackTitle: 'Bars', // Customizes the back label
+      });
     }
   }, [barName, navigation]);
+  
 
   useEffect(() => {
     const fetchAttendanceData = async () => {
