@@ -87,7 +87,7 @@ export default function HomeScreen() {
           timestamp: new Date().toISOString()
         });
   
-        Alert.alert('Success', 'Your attendance has been recorded in Firestore!');
+        //Alert.alert('Success', 'Your attendance has been recorded in Firestore!');
       } else {
         Alert.alert('Error', 'Please select an option.');
       }
@@ -207,10 +207,10 @@ useEffect(() => {
           const userData = await fetchUserData(user.uid); // Fetch the user data directly
   
           if (userData && userData.name) {
-            Alert.alert("Success", `Welcome to BarBuzz, ${userData.name}`);
+            //Alert.alert("Success", `Welcome to BarBuzz, ${userData.name}`);
           } else {
             console.log("User data not found or missing name.");
-            Alert.alert("Success", "Welcome to BarBuzz!");
+            //Alert.alert("Success", "Welcome to BarBuzz!");
           }
         } else {
           // Sign out if email is still not verified after retries
