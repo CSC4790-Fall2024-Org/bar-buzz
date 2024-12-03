@@ -267,7 +267,7 @@ useEffect(() => {
         // Sign out the user to prevent access before verification
         await signOut(auth);
         console.log("User signed out after registration.");
-        Alert.alert("Verification Required", "A verification email has been sent to your email address. Please verify before signing in.");
+        Alert.alert("Verification Required", "A verification email has been sent to your email address. Please verify before signing in. Allow up to 10 minutes.");
         
         // Save user data to Firestore for reference
         const firestore = getFirestore();
@@ -288,7 +288,7 @@ useEffect(() => {
       setModalVisible(true);
   
     } catch (error) {
-      console.error("Error during sign-up:", error);
+      //console.error("Error during sign-up:", error);
       Alert.alert('Error', 'Sign-up failed. Please try again.');
     }
   };  

@@ -82,7 +82,7 @@ app.post('/login', async (req, res) => {
 
     return res.status(200).json({ message: 'Login successful!', user: snapshot.docs[0].data() });
   } catch (error) {
-    console.error('Error during login:', error);
+    //console.error('Error during login:', error);
     return res.status(500).json({ error: 'An error occurred during login.' });
   }
 });
