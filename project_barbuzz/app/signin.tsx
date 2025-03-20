@@ -1,10 +1,19 @@
-// app/signin.tsx
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, Image } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  Image,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { getAuth, sendPasswordResetEmail, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-// If you want the "retry 3 times" logic, we can replicate it.
 
 const IconPng = require('../assets/images/icon.png');
 
@@ -20,7 +29,6 @@ export default function SignInScreen() {
       const user = auth.currentUser;
 
       if (user) {
-        // Wait up to 3 times for email verification
         let retryCount = 0;
         while (!user.emailVerified && retryCount < 3) {
           console.log('User email not verified. Retrying...');
@@ -33,7 +41,7 @@ export default function SignInScreen() {
           console.log('Email verified. Proceeding with login...');
           await AsyncStorage.setItem('userId', user.uid);
           Alert.alert('Success', 'Logged in successfully!');
-          router.push('/(tabs)'); // Go to main screen (index) or wherever
+          router.push('/(tabs)');
         } else {
           console.log('User email not verified after retries. Signing out...');
           await signOut(auth);
@@ -60,63 +68,65 @@ export default function SignInScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      {/* Logo at the top */}
-      <Image source={IconPng} style={styles.logo} />
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
+        <Image source={IconPng} style={styles.logo} />
+        <Text style={styles.title}>Sign In to BarBuzz</Text>
 
-      <Text style={styles.title}>Sign In to BarBuzz</Text>
-      {/* Email */}
-      <View style={styles.inputContainer}>
-        <Text>Email*</Text>
-        <TextInput
-          style={styles.input}
-          value={email}
-          onChangeText={setEmail}
-          placeholder="Your Email"
-          keyboardType="email-address"
-        />
-      </View>
+        <View style={styles.inputContainer}>
+          <Text>Email*</Text>
+          <TextInput
+            style={styles.input}
+            value={email}
+            onChangeText={setEmail}
+            placeholder="Your Email"
+            keyboardType="email-address"
+          />
+        </View>
 
-      {/* Password */}
-      <View style={styles.inputContainer}>
-        <Text>Password*</Text>
-        <TextInput
-          style={styles.input}
-          value={password}
-          onChangeText={setPassword}
-          placeholder="Your Password"
-          secureTextEntry
-        />
-      </View>
+        <View style={styles.inputContainer}>
+          <Text>Password*</Text>
+          <TextInput
+            style={styles.input}
+            value={password}
+            onChangeText={setPassword}
+            placeholder="Your Password"
+            secureTextEntry
+          />
+        </View>
 
-      <TouchableOpacity onPress={handleSignIn} style={styles.button}>
-        <Text style={styles.buttonText}>Sign In</Text>
-      </TouchableOpacity>
+        <TouchableOpacity onPress={handleSignIn} style={styles.button}>
+          <Text style={styles.buttonText}>Sign In</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity onPress={handleForgotPassword} style={{ marginTop: 10 }}>
-        <Text style={{ color: '#1E90FF', marginBottom: -8 }}>Forgot Password?</Text>
-      </TouchableOpacity>
+        <TouchableOpacity onPress={handleForgotPassword} style={{ marginTop: 10 }}>
+          <Text style={{ color: '#1E90FF', marginBottom: -8 }}>Forgot Password?</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity
-        onPress={() => router.replace('/signup')}
-        style={{ marginTop: 20 }}
-      >
-        <Text style={{ color: '#1E90FF', marginBottom: 20,}}>
-          Don't have an account? Sign Up
-        </Text>
-      </TouchableOpacity>
-    </View>
+        <TouchableOpacity
+          onPress={() => router.replace('/signup')}
+          style={{ marginTop: 20 }}
+        >
+          <Text style={{ color: '#1E90FF', marginBottom: 20 }}>
+            Don't have an account? Sign Up
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 20, backgroundColor: '#fff' },
+  container: { flex: 1, backgroundColor: '#fff' },
+  scrollContainer: { flexGrow: 1, justifyContent: 'center', padding: 20 },
   logo: {
     width: 150,
     height: 150,
     alignSelf: 'center',
     marginBottom: 20,
-    padding: 0,
   },
   title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
   inputContainer: { marginBottom: 15 },
@@ -136,3 +146,4 @@ const styles = StyleSheet.create({
   },
   buttonText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
 });
+
