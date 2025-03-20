@@ -1,0 +1,15 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "977c3764-6eff-40e3-99a8-cc63b687c3da"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "com.navisingh.barbuzz",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    }
+  }
+}

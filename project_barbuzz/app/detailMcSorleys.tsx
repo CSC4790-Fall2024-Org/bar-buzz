@@ -32,7 +32,8 @@ const DetailMcSorleys: React.FC = () => {
       const qPlanning = query(
         collection(db, 'tracking'),
         where('location.title', '==', barName), // Use dynamic barName
-        where('currentlyHere', '==', false)
+        //where('currentlyHere', '==', false)
+        where('planningToAttend', '==', true)
       );
 
       try {

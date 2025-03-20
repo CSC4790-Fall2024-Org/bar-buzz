@@ -36,7 +36,8 @@ const DetailGrog: React.FC = () => {
       const qPlanning = query(
         collection(db, 'tracking'),
         where('location.title', '==', barName), // Use the dynamic barName
-        where('currentlyHere', '==', false)
+        //where('currentlyHere', '==', false)
+        where('planningToAttend', '==', true)
       );
 
 

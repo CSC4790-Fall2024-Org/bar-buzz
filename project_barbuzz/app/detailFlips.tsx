@@ -27,7 +27,8 @@ const DetailFlips: React.FC = () => {
       const qPlanning = query(
         collection(db, 'tracking'),
         where('location.title', '==', "Flip & Bailey's"), 
-        where('currentlyHere', '==', false) 
+        //where('currentlyHere', '==', false) 
+        where('planningToAttend', '==', true)
       );
 
       let currentDataFetched = false;

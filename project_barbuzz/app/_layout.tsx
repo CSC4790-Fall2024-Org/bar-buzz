@@ -28,7 +28,7 @@ export default function RootLayout() {
   if (!loaded || showSplash) {
     return (
       <View style={styles.splashContainer}>
-        <Image source={require('@/assets/images/BarBuzz2.png')} style={styles.splashImage} />
+        <Image source={require('@/assets/images/icon.png')} style={styles.splashImage} />
       </View>
     );
   }
@@ -37,6 +37,8 @@ export default function RootLayout() {
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <SafeAreaView style={{ flex: 1 }}>
         <Stack>
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+
           {/* Main (tabs) navigation */}
           <Stack.Screen
             name="(tabs)"
@@ -48,11 +50,24 @@ export default function RootLayout() {
           <Stack.Screen
             name="signup"
             options={{
-              headerShown: false, // Hides the header for the signup screen
+              headerShown: true,
+              title: 'Get Started!',
             }}
           />
+
+          {/* Signup screen */}
+          <Stack.Screen
+            name="signin"
+            options={{
+              headerShown: true,
+              title: 'Welcome Back!',
+            }}
+          />
+
           {/* Other screens can have headers if needed */}
           { /* Example: <Stack.Screen name="detail" options={{ title: 'Friends' }} /> */}
+          <Stack.Screen name="map" options={{ headerShown: false }} />
+
         </Stack>
       </SafeAreaView>
     </ThemeProvider>

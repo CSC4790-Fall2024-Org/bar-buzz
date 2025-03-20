@@ -1,19 +1,19 @@
 {
   "expo": {
-    "name": "project_barbuzz",
+    "name": "BarBuzz",
     "slug": "project_barbuzz",
-    "version": "1.0.0",
+    "version": "3.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
-    "splash": {
-      "image": "./assets/images/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
     "ios": {
-      "supportsTablet": true
+      "buildNumber": "9",
+      "supportsTablet": true,
+      "bundleIdentifier": "com.navisingh.barbuzz",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -32,6 +32,15 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "4865ce07-7d73-4fc2-8da9-95569d300eab"
+      }
+    },
+    "owner": "navisingh"
   }
 }

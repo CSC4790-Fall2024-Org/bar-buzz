@@ -30,11 +30,18 @@ const DetailScreen: React.FC = () => {
         where('location.title', '==', barName), 
         where('currentlyHere', '==', true)
       );
-
+      
+      /*
       const qPlanning = query(
         collection(db, 'tracking'),
         where('location.title', '==', barName), 
         where('currentlyHere', '==', false)
+      );*/
+
+      const qPlanning = query(
+        collection(db, 'tracking'),
+        where('location.title', '==', barName),
+        where('planningToAttend', '==', true)
       );
 
       try {

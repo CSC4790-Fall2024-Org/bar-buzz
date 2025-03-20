@@ -10,7 +10,9 @@ import {
 import { Ionicons } from '@expo/vector-icons'; // Import for icons
 import { getAuth, signOut, sendPasswordResetEmail } from 'firebase/auth';
 import { useRouter } from 'expo-router';
+import { doc, deleteDoc } from 'firebase/firestore'; // for removing user doc
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {db} from '../firebase';
 
 interface SettingsModalProps {
   visible: boolean;
@@ -55,6 +57,57 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     }
   };
 
+  const handleDeleteAccount = async () => {
+    Alert.alert(
+      'Delete Account',
+      'Are you sure you want to permanently delete your account? This action cannot be undone.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const auth = getAuth();
+              const user = auth.currentUser;
+              if (!user) {
+                Alert.alert('Error', 'No user is currently logged in.');
+                return;
+              }
+  
+              // 1) Remove user’s Firestore doc (if you store user data there)
+              const userDocRef = doc(db, 'users', user.uid);
+              await deleteDoc(userDocRef);
+  
+              // 2) Delete the Firebase Auth user
+              await user.delete();
+  
+              // 3) Clear local storage & sign out
+              await AsyncStorage.clear();
+              Alert.alert('Account Deleted', 'Your account has been permanently deleted.');
+  
+              // Optionally navigate to a sign-up screen
+              router.replace('/signup');
+            } catch (error: any) {
+              console.error('Account deletion error: ', error);
+              if (error.code === 'auth/requires-recent-login') {
+                Alert.alert(
+                  'Deletion Error',
+                  'Please reauthenticate before deleting your account. Log out and log back in, then try again.'
+                );
+              } else {
+                Alert.alert('Deletion Error', 'Could not delete your account. Please try again later.');
+              }
+            }
+          },
+        },
+      ]
+    );
+  };  
+
   return (
     <Modal
       transparent={true}
@@ -83,13 +136,22 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             <Ionicons name="chevron-forward-outline" size={20} color="#aaa" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.menuItem} onPress={onClose}>
+          <TouchableOpacity style={styles.menuItem} onPress={handleDeleteAccount}>
+          <View style={styles.menuItemContent}>
+            <Ionicons name="trash-outline" size={24} color="#333" />
+            <Text style={styles.menuItemText}>Delete Account</Text>
+          </View>
+          <Ionicons name="chevron-forward-outline" size={20} color="#aaa" />
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.menuItem} onPress={onClose}>
             <View style={styles.menuItemContent}>
               <Ionicons name="close-outline" size={24} color="#333" />
               <Text style={styles.menuItemText}>Close</Text>
             </View>
             <Ionicons name="chevron-forward-outline" size={20} color="#aaa" />
           </TouchableOpacity>
+
         </View>
       </View>
     </Modal>

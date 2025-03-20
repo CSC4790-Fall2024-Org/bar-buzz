@@ -1,83 +1,40 @@
-import React, { useState, useEffect } from 'react';
-import { Alert, Button, Platform } from 'react-native';
+// PushNotificationHandler.js
+import { useEffect } from 'react';
+import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from './config/firebaseConfig.js'; // Adjust path as needed
 
-// Setup notification settings
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-  }),
-});
-
-export default function PushNotificationHandler() {
-  const [planningToAttend, setPlanningToAttend] = useState(false);
-  const [currentlyHere, setCurrentlyHere] = useState(false);
-  const notificationTimer = useRef(null);
-
-  // Schedule a notification
-  const scheduleNotification = async () => {
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: "Are you here yet?",
-        body: "Tap 'Yes' if you're here, or 'No' to be reminded again in a minute.",
-        actions: [
-          { identifier: "yes", title: "Yes" },
-          { identifier: "no", title: "No" },
-        ],
-      },
-      trigger: { seconds: 60 },
-    });
-  };
-
-  // Handle notification responses
+export function usePushNotifications(userId) {
   useEffect(() => {
-    const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
-      const actionId = response.actionIdentifier;
+    console.log('[PushNotificationHandler] useEffect triggered, userId =', userId);
 
-      if (actionId === "yes") {
-        clearTimeout(notificationTimer.current);
-        setCurrentlyHere(true);
-        Alert.alert("Thanks for letting us know!", "Enjoy your time!");
-      } else if (actionId === "no") {
-        scheduleNotification(); // Reschedule notification
-      }
-    });
-
-    return () => subscription.remove();
-  }, []);
-
-  // Monitor the planningToAttend state
-  useEffect(() => {
-    if (planningToAttend && !currentlyHere) {
-      scheduleNotification();
+    if (!userId) {
+      console.log('[PushNotificationHandler] No userId, skipping push token registration.');
+      return;
     }
 
-    return () => {
-      clearTimeout(notificationTimer.current);
-    };
-  }, [planningToAttend]);
+    async function registerForPushNotificationsAsync() {
+      try {
+        console.log('[PushNotificationHandler] Requesting notification permissions...');
+        const { status } = await Notifications.requestPermissionsAsync();
+        if (status !== 'granted') {
+          console.log('[PushNotificationHandler] Permissions not granted. No push token generated.');
+          return;
+        }
 
-  const handlePlanningToAttendChange = async () => {
-    setPlanningToAttend(true);
-    const userId = await AsyncStorage.getItem("userId");
-    console.log(`User ${userId} set planningToAttend to true.`);
-  };
+        const tokenData = await Notifications.getExpoPushTokenAsync();
+        const expoPushToken = tokenData.data;
+        console.log('[PushNotificationHandler] Got expo push token =>', expoPushToken);
 
-  return (
-    <>
-      <Button
-        title="Plan to Attend"
-        onPress={handlePlanningToAttendChange}
-        disabled={planningToAttend}
-      />
-      <Button
-        title="Currently Here"
-        onPress={() => setCurrentlyHere(true)}
-        disabled={currentlyHere}
-      />
-    </>
-  );
+        console.log('[PushNotificationHandler] Saving push token to Firestore...');
+        await setDoc(doc(db, 'users', userId), { pushToken: expoPushToken }, { merge: true });
+        console.log('[PushNotificationHandler] pushToken saved successfully to Firestore!');
+      } catch (error) {
+        console.error('[PushNotificationHandler] Error registering for notifications =>', error);
+      }
+    }
+
+    registerForPushNotificationsAsync();
+  }, [userId]);
 }

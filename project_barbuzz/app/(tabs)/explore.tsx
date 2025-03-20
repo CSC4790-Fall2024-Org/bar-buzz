@@ -21,6 +21,20 @@ const DATA: Item[] = [
   { name: "Flip & Bailey's", key: "4" },
 ];
 
+const initialPeopleCount: {
+  [key: string]: { planning: number; currentlyHere: number; total: number }
+} = {};
+
+// Loop over your DATA array to initialize each bar
+DATA.forEach((bar) => {
+  initialPeopleCount[bar.name] = {
+    planning: 0,
+    currentlyHere: 0,
+    total: 0,
+  };
+});
+
+
 const routePaths: Record<string, "/detail" | "/detailGrog" | "/detailMcSorleys" | "/detailFlips"> = {
   "Kelly's Taproom": "/detail",
   "The Grog Grill": "/detailGrog",
@@ -31,11 +45,13 @@ const routePaths: Record<string, "/detail" | "/detailGrog" | "/detailMcSorleys" 
 const TabTwoScreen: React.FC = () => {
   const router = useRouter();
   const navigation = useNavigation();
-  const [peopleCount, setPeopleCount] = useState<{ [key: string]: { planning: number; currentlyHere: number; total: number } }>({});
+  const [peopleCount, setPeopleCount] = useState<{
+    [key: string]: { planning: number; currentlyHere: number; total: number };
+  }>(initialPeopleCount);
   const [showBuzzInModal, setShowBuzzInModal] = useState(false);
   const countsRef = useRef<{ [key: string]: { planning: number; currentlyHere: number } }>({});
   const unsubscribeRef = useRef<{ [key: string]: () => void }>({});
-  const [resetTimestamp, setResetTimestamp] = useState<number | null>(null);
+  //const [resetTimestamp, setResetTimestamp] = useState<number | null>(null);
 
   useEffect(() => {
     navigation.setOptions({ title: 'Bars' });
@@ -104,9 +120,9 @@ const TabTwoScreen: React.FC = () => {
     return () => {
       unsubscribeAll();
     };
-  }, [resetTimestamp]);
+  }, []);
 
-  const triggerReset = async () => {
+  /*const triggerReset = async () => {
     try {
       // Call the backend API to reset daily submissions
       const response = await fetch('http://localhost:8082/clear-daily-submissions', { method: 'POST' });
@@ -123,7 +139,7 @@ const TabTwoScreen: React.FC = () => {
   
         // Update the counts to ensure planningToAttend is properly reflected
         countsRef.current[barName] = {
-          planning: planningToAttend ? 0 : 0, // Setting to 0 after reset
+          planning: planningToAttend ? 1 : 0, // Setting to 0 after reset
           currentlyHere: currentlyHere ? 1 : 0
         };
         updatePeopleCount(barName);
@@ -135,15 +151,16 @@ const TabTwoScreen: React.FC = () => {
     } catch (error) {
       //console.error('Error triggering reset:', error);
     }
-  };
+  };*/
   
+  /*
   useEffect(() => {
     const initialize = async () => {
-      await triggerReset(); // Trigger the reset on component mount
+      //await triggerReset(); // Trigger the reset on component mount
     };
   
     initialize();
-  }, []);  
+  }, []);  */
   
 
   const handlePress = async (item: Item) => {
