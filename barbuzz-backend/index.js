@@ -129,13 +129,3 @@ app.get('/user/:userId', async (req, res) => {
     return res.status(500).json({ error: 'An error occurred while fetching user data.' });
   }
 });
-
-
-// Start the server
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}/`);
-});
-
-
-
-
