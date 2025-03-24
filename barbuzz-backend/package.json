@@ -23,6 +23,7 @@
     "firebase-functions": "^6.1.0",
     "mysql2": "^3.11.3",
     "node": "^22.9.0",
+    "node-mailjet": "^6.0.8",
     "nodemailer": "^6.9.16"
   }
 }

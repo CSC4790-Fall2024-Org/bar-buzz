@@ -6,6 +6,9 @@ const bodyParser = require('body-parser');
 const admin = require('firebase-admin');  // Add Firebase Admin SDK
 const functions = require('firebase-functions');
 const app = express();
+const crypto = require('crypto');
+const { sendVerificationEmail } = require('./sendEmail'); // or wherever you defined it
+
 
 const PORT = process.env.PORT || 8082;
 app.listen(PORT, () => {
@@ -28,6 +31,79 @@ admin.initializeApp({
 
 // Firestore reference
 const db = admin.firestore();
+
+app.post('/custom-signup', async (req, res) => {
+  try {
+    const { email, password, firstName, lastName, dob } = req.body;
+
+    // 1) Create the user in Firebase Auth via Admin SDK
+    const userRecord = await admin.auth().createUser({
+      email,
+      password,
+      emailVerified: false, // Force unverified initially
+    });
+
+    // 2) Store user info in Firestore
+    await db.collection('users').doc(userRecord.uid).set({
+      name: `${firstName.trim()} ${lastName.trim()}`,
+      email,
+      dob,
+      profileIcon: 'default',
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    // 3) Generate a custom verification token (or random string)
+    const token = crypto.randomBytes(32).toString('hex');
+    // Save token in a `verificationTokens` collection (or your own logic)
+    await db.collection('verificationTokens').doc(userRecord.uid).set({
+      token,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    // 4) Send Mailjet email with your custom link
+    const verifyUrl = `https://bar-buzz.onrender.com/verify?uid=${userRecord.uid}&token=${token}`;
+    await sendVerificationEmail(email, verifyUrl); // calls your mailjet.js
+
+    return res.status(200).json({ message: 'Sign-up successful, verification email sent!' });
+  } catch (error) {
+    console.error('Custom signup error:', error);
+    return res.status(500).json({ error: 'Failed to create user.' });
+  }
+});
+
+app.get('/verify', async (req, res) => {
+  try {
+    const { uid, token } = req.query;
+    if (!uid || !token) {
+      return res.status(400).send('Missing uid or token');
+    }
+
+    // 1) Retrieve the stored token doc from Firestore
+    const docRef = db.collection('verificationTokens').doc(uid);
+    const docSnap = await docRef.get();
+    if (!docSnap.exists) {
+      return res.status(400).send('Invalid link');
+    }
+
+    const data = docSnap.data();
+    // 2) Check if the token matches
+    if (data.token !== token) {
+      return res.status(400).send('Invalid or expired token');
+    }
+
+    // 3) Mark user as verified in Firebase Auth
+    await admin.auth().updateUser(uid, { emailVerified: true });
+
+    // 4) (Optional) delete the token doc so it can’t be reused
+    await docRef.delete();
+
+    // 5) Return or redirect to a "Success" page
+    return res.send('Your email has been verified! You can now close this page.');
+  } catch (error) {
+    console.error('Error verifying email:', error);
+    return res.status(500).send('An error occurred while verifying your email.');
+  }
+});
 
 // -----------------------------
 // 1) BUZZED SUBMISSION ROUTE

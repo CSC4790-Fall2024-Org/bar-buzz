@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { getAuth, createUserWithEmailAndPassword, sendEmailVerification, signOut } from 'firebase/auth';
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import './config/firebaseConfig'; // adjust the path based on your file location
 
 const IconPng = require('../assets/images/icon.png');
 
@@ -27,56 +28,57 @@ export default function SignUpScreen() {
     setDob(formatted);
   };
 
-  const handleSignUp = async () => {
-    if (!email || !firstName || !lastName || !password || !dob) {
-      Alert.alert('Missing Information', 'Please complete all required fields.');
+  const SERVER_URL = 'https://bar-buzz.onrender.com';
+
+async function handleSignUp() {
+  if (!email || !firstName || !lastName || !password || !dob) {
+    Alert.alert('Missing Information', 'Please complete all required fields.');
+    return;
+  }
+  if (!email.endsWith('@villanova.edu')) {
+    Alert.alert('Invalid Email', 'Please use a Villanova email address.');
+    return;
+  }
+  const birthYear = parseInt(dob.split('/')[2]);
+  const currentYear = new Date().getFullYear();
+  if (currentYear - birthYear < 21) {
+    Alert.alert('Age Restriction', 'You must be 21+ to sign up.');
+    return;
+  }
+
+  try {
+    // POST all the sign-up info to your backend
+    const response = await fetch(`${SERVER_URL}/custom-signup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        password,
+        firstName,
+        lastName,
+        dob
+      }),
+    });
+
+    if (!response.ok) {
+      // If the server sends an error, display it
+      const errorData = await response.json();
+      Alert.alert('Error', errorData.error || 'Sign-up failed. Please try again.');
       return;
     }
 
-    if (!email.endsWith('@villanova.edu')) {
-      Alert.alert('Invalid Email', 'Please use a Villanova email address.');
-      return;
-    }
+    // On success, let the user know to check their email
+    Alert.alert(
+      'Verification Required',
+      'A verification email has been sent. Please check your inbox and confirm your account before signing in.'
+    );
 
-    const birthYear = parseInt(dob.split('/')[2]);
-    const currentYear = new Date().getFullYear();
-    if (currentYear - birthYear < 21) {
-      Alert.alert('Age Restriction', 'You must be 21+ to sign up.');
-      return;
-    }
-
-    try {
-      const auth = getAuth();
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
-      if (user) {
-        await sendEmailVerification(user);
-        await signOut(auth);
-        Alert.alert(
-          'Verification Required',
-          'A verification email has been sent to your email address. Please verify before signing in.'
-        );
-
-        const db = getFirestore();
-        const [month, day, year] = dob.split('/');
-        const formattedDob = `${year}-${month}-${day}`;
-
-        await setDoc(doc(db, 'users', user.uid), {
-          name: `${firstName.trim()} ${lastName.trim()}`,
-          email,
-          dob: formattedDob,
-          profileIcon: 'default',
-        });
-      }
-
-      if (user && !user.emailVerified) {
-        router.replace('/signin');
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Sign-up failed. Please try again.');
-    }
-  };
+    // Redirect them to sign-in
+    router.replace('/signin');
+  } catch (error) {
+    Alert.alert('Error', 'Sign-up failed. Please try again.');
+  }
+}
 
   return (
     <KeyboardAvoidingView

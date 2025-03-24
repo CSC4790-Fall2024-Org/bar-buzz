@@ -14,46 +14,49 @@ import {
 import { useRouter } from 'expo-router';
 import { getAuth, sendPasswordResetEmail, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import './config/firebaseConfig'; // adjust the path based on your file location
+
 
 const IconPng = require('../assets/images/icon.png');
 
-const SERVER_URL = 'http://localhost:8082/login';
+const SERVER_URL = 'https://bar-buzz.onrender.com';
 
 export default function SignInScreen() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleSignIn = async () => {
+  async function handleSignIn() {
     try {
+      // 1) Sign in with Firebase Auth
       const auth = getAuth();
-      const response = await signInWithEmailAndPassword(auth, email, password);
-      const user = auth.currentUser;
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
-      if (user) {
-        let retryCount = 0;
-        while (!user.emailVerified && retryCount < 3) {
-          console.log('User email not verified. Retrying...');
-          await new Promise(resolve => setTimeout(resolve, 3000));
-          await user.reload();
-          retryCount++;
-        }
+      // 2) Get the ID token
+      const idToken = await user.getIdToken(true);
 
-        if (user.emailVerified) {
-          console.log('Email verified. Proceeding with login...');
-          await AsyncStorage.setItem('userId', user.uid);
-          Alert.alert('Success', 'Logged in successfully!');
-          router.push('/(tabs)');
-        } else {
-          console.log('User email not verified after retries. Signing out...');
-          await signOut(auth);
-          Alert.alert('Email Not Verified', 'Please verify your email to access the app.');
-        }
+      // 3) POST to your server
+      const response = await fetch(`${SERVER_URL}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        Alert.alert('Login failed', errorData.error || 'Unknown error');
+        return;
       }
+
+      const data = await response.json();
+      Alert.alert('Success', data.message); // e.g. "Login successful! User is verified."
+      // Navigate to your home/tabs
+      router.push('/(tabs)');
     } catch (error) {
-      Alert.alert('Error', 'Invalid credentials or an issue with sign-in. Please try again.');
+      Alert.alert('Error', 'Invalid credentials or an issue with sign-in.');
     }
-  };
+  }
 
   const handleForgotPassword = async () => {
     if (!email) {
