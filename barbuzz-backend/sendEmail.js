@@ -7,7 +7,7 @@ async function sendVerificationEmail(toEmail, verificationLink) {
     Messages: [
       {
         From: {
-          Email: 'barbuzzteam@gmail.com', // MUST match the verified sender
+          Email: 'noreply@barbuzz.co', // MUST match the verified sender
           Name: 'BarBuzz Team',
         },
         To: [{ Email: toEmail }],

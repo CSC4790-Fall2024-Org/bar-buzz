@@ -61,7 +61,7 @@ app.post('/custom-signup', async (req, res) => {
     });
 
     // 4) Send Mailjet email with your custom link
-    const verifyUrl = `https://bar-buzz.onrender.com/verify?uid=${userRecord.uid}&token=${token}`;
+    const verifyUrl = `https://barbuzz.co/verify?uid=${uid}&token=${token}`;
     await sendVerificationEmail(email, verifyUrl); // calls your mailjet.js
 
     return res.status(200).json({ message: 'Sign-up successful, verification email sent!' });

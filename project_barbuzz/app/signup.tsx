@@ -35,10 +35,10 @@ async function handleSignUp() {
     Alert.alert('Missing Information', 'Please complete all required fields.');
     return;
   }
-  // if (!email.endsWith('@villanova.edu')) {
-  //   Alert.alert('Invalid Email', 'Please use a Villanova email address.');
-  //   return;
-  // }
+  if (!email.endsWith('@villanova.edu')) {
+    Alert.alert('Invalid Email', 'Please use a Villanova email address.');
+    return;
+  }
   const birthYear = parseInt(dob.split('/')[2]);
   const currentYear = new Date().getFullYear();
   if (currentYear - birthYear < 21) {
