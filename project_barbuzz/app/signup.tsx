@@ -28,7 +28,7 @@ export default function SignUpScreen() {
     setDob(formatted);
   };
 
-  const SERVER_URL = 'https://bar-buzz.onrender.com';
+const SERVER_URL = 'https://barbuzz.co';
 
 async function handleSignUp() {
   if (!email || !firstName || !lastName || !password || !dob) {

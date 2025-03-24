@@ -19,7 +19,7 @@ import './config/firebaseConfig'; // adjust the path based on your file location
 
 const IconPng = require('../assets/images/icon.png');
 
-const SERVER_URL = 'https://bar-buzz.onrender.com';
+const SERVER_URL = 'https://barbuzz.co';
 
 export default function SignInScreen() {
   const router = useRouter();
