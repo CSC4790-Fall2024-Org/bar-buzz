@@ -105,6 +105,11 @@ app.get('/verify', async (req, res) => {
   }
 });
 
+// /login route
+if (!userRecord.emailVerified) {
+  return res.status(403).json({ error: 'Email not verified. Please verify your email before logging in.' });
+}
+
 // -----------------------------
 // 1) BUZZED SUBMISSION ROUTE
 // -----------------------------

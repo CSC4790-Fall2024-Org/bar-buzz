@@ -1,21 +1,20 @@
 // sendEmail.js
 const mailjet = require('./mailjet');
+const mailjet = new Mailjet({
+  apiKey: process.env.MJ_APIKEY_PUBLIC,
+  apiSecret: process.env.MJ_APIKEY_PRIVATE,
+});
 
 async function sendVerificationEmail(toEmail, verificationLink) {
   // This is the structure required by Mailjet's v3.1 API
-  const requestBody = {
+  const request = mailjet.post('send', { version: 'v3.1' }).request({
     Messages: [
       {
         From: {
           Email: 'barbuzzteam@gmail.com', // MUST match the verified sender
           Name: 'BarBuzz Team',
         },
-        To: [
-          {
-            Email: toEmail,
-            Name: '', // optional
-          },
-        ],
+        To: [{ Email: toEmail }],
         Subject: 'Verify Your Email for BarBuzz',
         TextPart: `Please verify your email by clicking the link: ${verificationLink}`,
         HTMLPart: `
@@ -26,7 +25,7 @@ async function sendVerificationEmail(toEmail, verificationLink) {
         `,
       },
     ],
-  };
+  });
 
   try {
     const response = await mailjet.post('send', { version: 'v3.1' }).request(requestBody);
