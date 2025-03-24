@@ -17,6 +17,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const IconPng = require('../assets/images/icon.png');
 
+const SERVER_URL = 'http://localhost:8082/login';
+
 export default function SignInScreen() {
   const router = useRouter();
   const [email, setEmail] = useState('');

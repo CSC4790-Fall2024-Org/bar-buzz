@@ -1,9 +1,9 @@
 const admin = require('firebase-admin');
-const serviceAccount = require('./barbuzz-29b1a-firebase-adminsdk-srfma-75e610b615.json');
-
+const serviceAccountJson = JSON.parse(process.env.SERVICE_ACCOUNT_JSON);
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
+  credential: admin.credential.cert(serviceAccountJson),
 });
+
 
 const db = admin.firestore();
 module.exports = { db };
