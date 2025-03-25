@@ -43,9 +43,12 @@ app.post('/custom-signup', async (req, res) => {
       emailVerified: false, // Force unverified initially
     });
 
+    const uid = userRecord.uid;
+    const fullName = `${firstName.trim()} ${lastName.trim()}`;
+
     // 2) Store user info in Firestore
-    await db.collection('users').doc(userRecord.uid).set({
-      name: `${firstName.trim()} ${lastName.trim()}`,
+    await db.collection('users').doc(uid).set({
+      name: fullName,
       email,
       dob,
       profileIcon: 'default',
@@ -54,17 +57,19 @@ app.post('/custom-signup', async (req, res) => {
 
     // 3) Generate a custom verification token (or random string)
     const token = crypto.randomBytes(32).toString('hex');
+    console.log(`[custom-signup] Storing verification token under UID: ${uid}`);
+
     // Save token in a `verificationTokens` collection (or your own logic)
-    await db.collection('verificationTokens').doc(userRecord.uid).set({
+    await db.collection('verificationTokens').doc(uid).set({
       token,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
-    console.log(`[custom-signup] Token saved for UID: ${userRecord.uid}`);
-
 
     // 4) Send Mailjet email with your custom link
     //    Use userRecord.uid instead of an undefined uid variable
-    const verifyUrl = `https://barbuzz.co/verify?uid=${userRecord.uid}&token=${token}`;
+    const verifyUrl = `https://barbuzz.co/verify?uid=${uid}&token=${token}`;
+    console.log(`[custom-signup] Verification URL: ${verifyUrl}`);
+    
     await sendVerificationEmail(email, verifyUrl);
 
     return res.status(200).json({ message: 'Sign-up successful, verification email sent!' });
@@ -82,6 +87,8 @@ app.get('/verify', async (req, res) => {
       return res.status(400).send('Missing uid or token');
     }
 
+    console.log(`[verify] Verifying UID: ${uid}, Token: ${token}`);
+
     const docRef = db.collection('verificationTokens').doc(uid);
     const docSnap = await docRef.get();
 
@@ -92,14 +99,17 @@ app.get('/verify', async (req, res) => {
     const data = docSnap.data();
 
     if (data.token !== token) {
+      console.log('[verify] Token mismatch.');
       return res.status(400).send('Invalid or expired token');
     }
 
     // ✅ Mark email as verified
     await admin.auth().updateUser(uid, { emailVerified: true });
+    console.log(`[verify] Email marked as verified for UID: ${uid}`);
 
     // ✅ Delete token so it can’t be reused
     await docRef.delete();
+    console.log(`[verify] Token deleted for UID: ${uid}`);
 
     return res.send('Your email has been verified! You can now close this page and sign in.');
   } catch (error) {
@@ -107,6 +117,7 @@ app.get('/verify', async (req, res) => {
     return res.status(500).send('An error occurred while verifying your email.');
   }
 });
+
 
 // -----------------------------
 // 1) BUZZED SUBMISSION ROUTE
