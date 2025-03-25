@@ -49,6 +49,9 @@ export default function SignInScreen() {
         return;
       }
 
+      // Only push to tabs on success
+      router.push('/(tabs)');
+
       const data = await response.json();
       Alert.alert('Success', data.message); // e.g. "Login successful! User is verified."
       // Navigate to your home/tabs

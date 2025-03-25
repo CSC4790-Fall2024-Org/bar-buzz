@@ -36,6 +36,7 @@ app.post('/custom-signup', async (req, res) => {
     const { email, password, firstName, lastName, dob } = req.body;
 
     // 1) Create the user in Firebase Auth via Admin SDK
+    console.log('[custom-signup] About to create user in Firebase Auth...');
     const userRecord = await admin.auth().createUser({
       email,
       password,
