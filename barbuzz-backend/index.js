@@ -76,42 +76,32 @@ app.post('/custom-signup', async (req, res) => {
 
 app.get('/verify', async (req, res) => {
   try {
-    console.log('[verify] UID:', uid);
-    console.log('[verify] Token:', token);
+    const { uid, token } = req.query; // ✅ FIRST THING: define uid & token
 
-    const { uid, token } = req.query;
     if (!uid || !token) {
       return res.status(400).send('Missing uid or token');
     }
 
-    // 1) Retrieve the stored token doc from Firestore
     const docRef = db.collection('verificationTokens').doc(uid);
     const docSnap = await docRef.get();
+
     if (!docSnap.exists) {
       return res.status(400).send('Invalid link');
     }
 
-    // After getting docSnap
-  if (!docSnap.exists) {
-  console.log('[verify] No document found for UID:', uid);
-  return res.status(400).send('Invalid link');
-  }
-
-
     const data = docSnap.data();
-    // 2) Check if the token matches
+
     if (data.token !== token) {
       return res.status(400).send('Invalid or expired token');
     }
 
-    // 3) Mark user as verified in Firebase Auth
+    // ✅ Mark email as verified
     await admin.auth().updateUser(uid, { emailVerified: true });
 
-    // 4) (Optional) delete the token doc so it can’t be reused
+    // ✅ Delete token so it can’t be reused
     await docRef.delete();
 
-    // 5) Return or redirect to a "Success" page
-    return res.send('Your email has been verified! You can now close this page.');
+    return res.send('Your email has been verified! You can now close this page and sign in.');
   } catch (error) {
     console.error('Error verifying email:', error);
     return res.status(500).send('An error occurred while verifying your email.');
