@@ -59,6 +59,8 @@ app.post('/custom-signup', async (req, res) => {
       token,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
+    console.log(`[custom-signup] Token saved for UID: ${userRecord.uid}`);
+
 
     // 4) Send Mailjet email with your custom link
     //    Use userRecord.uid instead of an undefined uid variable
@@ -74,6 +76,9 @@ app.post('/custom-signup', async (req, res) => {
 
 app.get('/verify', async (req, res) => {
   try {
+    console.log('[verify] UID:', uid);
+    console.log('[verify] Token:', token);
+
     const { uid, token } = req.query;
     if (!uid || !token) {
       return res.status(400).send('Missing uid or token');
@@ -85,6 +90,13 @@ app.get('/verify', async (req, res) => {
     if (!docSnap.exists) {
       return res.status(400).send('Invalid link');
     }
+
+    // After getting docSnap
+  if (!docSnap.exists) {
+  console.log('[verify] No document found for UID:', uid);
+  return res.status(400).send('Invalid link');
+  }
+
 
     const data = docSnap.data();
     // 2) Check if the token matches
