@@ -1,8 +1,10 @@
 // sendEmail.js
-const mailjet = require('node-mailjet').connect(
-  process.env.MJ_APIKEY_PUBLIC,
-  process.env.MJ_APIKEY_PRIVATE
-);
+const Mailjet = require('node-mailjet');
+
+const mailjet = new Mailjet({
+  apiKey: process.env.MJ_APIKEY_PUBLIC,
+  apiSecret: process.env.MJ_APIKEY_PRIVATE,
+});
 
 async function sendVerificationEmail(toEmail, verificationLink) {
   // This is the structure required by Mailjet's v3.1 API
@@ -26,22 +28,12 @@ async function sendVerificationEmail(toEmail, verificationLink) {
     ],
   };
 
-    // 2) Pass requestBody to mailjet
-    const response = await mailjet
-    .post('send', { version: 'v3.1' })
-    .request(requestBody);
+  // 2) Pass requestBody to mailjet
+  const response = await mailjet
+  .post('send', { version: 'v3.1' })
+  .request(requestBody);
 
   console.log('Mailjet response:', response.body);
-
-  try {
-    const response = await mailjet.post('send', { version: 'v3.1' }).request(requestBody);
-    console.log('Mailjet response:', response.body);
-    console.log(`Verification email sent to ${toEmail}`);
-  } catch (error) {
-    console.error('Error sending verification email:', error);
-    throw error;
-  }
-
 
 }
 
