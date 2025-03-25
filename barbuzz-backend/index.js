@@ -1,4 +1,4 @@
-// Touch this
+// index.js
 console.log(__dirname);
 const express = require('express');
 const cors = require('cors');
@@ -8,7 +8,6 @@ const functions = require('firebase-functions');
 const app = express();
 const crypto = require('crypto');
 const { sendVerificationEmail } = require('./sendEmail'); // or wherever you defined it
-
 
 const PORT = process.env.PORT || 8082;
 app.listen(PORT, () => {
@@ -61,8 +60,9 @@ app.post('/custom-signup', async (req, res) => {
     });
 
     // 4) Send Mailjet email with your custom link
-    const verifyUrl = `https://barbuzz.co/verify?uid=${uid}&token=${token}`;
-    await sendVerificationEmail(email, verifyUrl); // calls your mailjet.js
+    //    Use userRecord.uid instead of an undefined uid variable
+    const verifyUrl = `https://barbuzz.co/verify?uid=${userRecord.uid}&token=${token}`;
+    await sendVerificationEmail(email, verifyUrl);
 
     return res.status(200).json({ message: 'Sign-up successful, verification email sent!' });
   } catch (error) {
