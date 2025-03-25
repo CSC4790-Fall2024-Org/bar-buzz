@@ -28,7 +28,7 @@ export default function SignUpScreen() {
     setDob(formatted);
   };
 
-const SERVER_URL = 'https://barbuzz.co';
+const SERVER_URL = 'https://barbuzz.co/custom-signup';
 
 async function handleSignUp() {
   if (!email || !firstName || !lastName || !password || !dob) {
