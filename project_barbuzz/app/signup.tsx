@@ -70,7 +70,7 @@ async function handleSignUp() {
     // On success, let the user know to check their email
     Alert.alert(
       'Verification Required',
-      'A verification email has been sent. Please check your inbox and confirm your account before signing in.'
+      'A verification email has been sent. Please check your inbox and click the link to confirm your account. It may take a few minutes to arrive.'
     );
 
     // Redirect them to sign-in

@@ -93,7 +93,18 @@ app.get('/verify', async (req, res) => {
     const docSnap = await docRef.get();
 
     if (!docSnap.exists) {
-      return res.status(400).send('Invalid link');
+      return res.send(`
+        <html>
+          <head><title>Welcome to BarBuzz!</title></head>
+          <body style="font-family: sans-serif; text-align: center; padding-top: 50px;">
+            <h1>✅ You’re In!</h1>
+            <p>Thanks for signing up. Time to Buzz In and Create the Scene.</p>
+            <p>You can now return to the app and log in.</p>
+            <br/>
+            <p style="font-size: 14px; color: #888;">– The BarBuzz Team 🐝</p>
+          </body>
+        </html>
+      `);
     }
 
     const data = docSnap.data();
