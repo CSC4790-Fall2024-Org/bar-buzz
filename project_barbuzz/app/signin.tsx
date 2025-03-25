@@ -52,6 +52,7 @@ export default function SignInScreen() {
       const data = await response.json();
       Alert.alert('Success', data.message); // e.g. "Login successful! User is verified."
       // Navigate to your home/tabs
+      await AsyncStorage.setItem('userId', data.uid); 
       router.push('/(tabs)');
     } catch (error) {
       Alert.alert('Error', 'Invalid credentials or an issue with sign-in.');
