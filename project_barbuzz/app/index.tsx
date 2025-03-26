@@ -1,26 +1,41 @@
-// app/index.tsx
-import React, { useEffect } from 'react';
-import { getAuth } from 'firebase/auth';
+import { useEffect, useState } from 'react';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { View, ActivityIndicator } from 'react-native';
 
 export default function Index() {
   const router = useRouter();
+  const [checkingAuth, setCheckingAuth] = useState(true);
 
   useEffect(() => {
     const auth = getAuth();
-    const user = auth.currentUser;
 
-    // Wait one “tick” so the root layout can mount
-    setTimeout(() => {
-      if (!user) {
-        // Not logged in => go to signup
-        router.replace('/signup');
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        router.replace('/(tabs)');
       } else {
-        // Already logged in => go to tabs or map
-        router.replace('/(tabs)'); 
+        // fallback for dev only
+        const storedId = await AsyncStorage.getItem('userId');
+        if (storedId) {
+          router.replace('/(tabs)');
+        } else {
+          router.replace('/signup');
+        }
       }
-    }, 0);
+      setCheckingAuth(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  return null; // Renders nothing
+  if (checkingAuth) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  return null;
 }
