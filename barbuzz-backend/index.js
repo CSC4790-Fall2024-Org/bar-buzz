@@ -183,7 +183,7 @@ app.post('/login', async (req, res) => {
     // but do NOT store plaintext passwords in Firestore.
 
     return res.status(200).json({
-      message: 'Login successful! User is verified.',
+      message: 'Login successful!',
       uid: decodedToken.uid,
       email: userRecord.email,
       // any other data you want to return

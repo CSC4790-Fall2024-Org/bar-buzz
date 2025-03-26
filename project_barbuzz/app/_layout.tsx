@@ -6,7 +6,7 @@ import React, { useState, useEffect } from 'react';
 import { SafeAreaView, View, Image, StyleSheet } from 'react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
-SplashScreen.preventAutoHideAsync();
+//SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -15,6 +15,7 @@ export default function RootLayout() {
   });
   const [showSplash, setShowSplash] = useState(true);
 
+  /*
   useEffect(() => {
     if (loaded) {
       // Hide the splash screen after 2 seconds
@@ -32,6 +33,7 @@ export default function RootLayout() {
       </View>
     );
   }
+    */
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>

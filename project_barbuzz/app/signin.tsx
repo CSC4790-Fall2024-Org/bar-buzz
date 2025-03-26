@@ -8,7 +8,9 @@ import {
   Alert,
   Image,
   ScrollView,
+  Keyboard,
   KeyboardAvoidingView,
+  TouchableWithoutFeedback,
   Platform
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -77,9 +79,12 @@ export default function SignInScreen() {
   };
 
   return (
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+
     >
       <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
         <Image source={IconPng} style={styles.logo} />
@@ -125,6 +130,8 @@ export default function SignInScreen() {
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
+    </TouchableWithoutFeedback>
+
   );
 }
 

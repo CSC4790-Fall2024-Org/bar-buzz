@@ -6,6 +6,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   Alert,
+  Linking,
+  Image
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons'; // Import for icons
 import { getAuth, signOut, sendPasswordResetEmail } from 'firebase/auth';
@@ -13,6 +15,8 @@ import { useRouter } from 'expo-router';
 import { doc, deleteDoc } from 'firebase/firestore'; // for removing user doc
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {db} from '../firebase';
+const InstagramIcon = require('../assets/images/instagram.png');
+const EmailIcon = require ('../assets/images/mail.png');
 
 interface SettingsModalProps {
   visible: boolean;
@@ -120,18 +124,18 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
           <Text style={styles.modalTitle}>Settings</Text>
 
           {/* Menu Options */}
-          <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
-            <View style={styles.menuItemContent}>
-              <Ionicons name="log-out-outline" size={24} color="#333" />
-              <Text style={styles.menuItemText}>Log Out</Text>
-            </View>
-            <Ionicons name="chevron-forward-outline" size={20} color="#aaa" />
-          </TouchableOpacity>
-
           <TouchableOpacity style={styles.menuItem} onPress={handlePasswordReset}>
             <View style={styles.menuItemContent}>
               <Ionicons name="lock-closed-outline" size={24} color="#333" />
               <Text style={styles.menuItemText}>Reset Password</Text>
+            </View>
+            <Ionicons name="chevron-forward-outline" size={20} color="#aaa" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
+            <View style={styles.menuItemContent}>
+              <Ionicons name="log-out-outline" size={24} color="#333" />
+              <Text style={styles.menuItemText}>Log Out</Text>
             </View>
             <Ionicons name="chevron-forward-outline" size={20} color="#aaa" />
           </TouchableOpacity>
@@ -151,6 +155,23 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             </View>
             <Ionicons name="chevron-forward-outline" size={20} color="#aaa" />
           </TouchableOpacity>
+
+          <View style={styles.socialIcons}>
+  <TouchableOpacity
+    onPress={() => Linking.openURL('https://www.instagram.com/thebarbuzz/?utm_source=ig_web_button_share_sheet')}
+    style={styles.iconButton}
+  >
+    <Image source={InstagramIcon} style={styles.icon} resizeMode="contain" />
+  </TouchableOpacity>
+
+  <TouchableOpacity
+    onPress={() => Linking.openURL('mailto:barbuzzteam@gmail.com')}
+    style={styles.iconButton}
+  >
+    <Image source={EmailIcon} style={styles.icon} resizeMode="contain" />
+  </TouchableOpacity>
+</View>
+
 
         </View>
       </View>
@@ -196,6 +217,19 @@ const styles = StyleSheet.create({
     marginLeft: 15,
     color: '#333',
   },
+  socialIcons: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 20,
+    gap: 30,
+  },
+  iconButton: {
+    paddingHorizontal: 10,
+  },
+  icon: {
+    width: 30,
+    height: 30,
+  }, 
 });
 
 export default SettingsModal;

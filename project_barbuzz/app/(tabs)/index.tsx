@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { StatusBar } from 'expo-status-bar';
 import MapView, { Marker, Region } from 'react-native-maps';
-import { collection, getDocs, query, where, addDoc } from 'firebase/firestore';
+import { collection, getDocs, query, where, addDoc, deleteDoc } from 'firebase/firestore';
 import { ScrollView } from 'react-native';
 import { auth, db } from '../config/firebaseConfig.js';
 import { LogBox } from 'react-native';
@@ -81,31 +81,65 @@ usePushNotifications(myUserId);
   const handleBuzzedSubmit = async () => {
     try {
       const userId = await AsyncStorage.getItem('userId');
-      if (!userId) {
-        Alert.alert('Error', 'User ID not found. Please log in again.');
+      if (!userId || !selectedLocation) {
+        Alert.alert('Error', 'User ID or location missing.');
         return;
       }
-      if (currentlyHere || planningToAttend) {
-        await addDoc(collection(db, 'tracking'), {
-          userId: userId || 'anonymous',
-          currentlyHere,
-          planningToAttend,
-          location: selectedLocation, // Save the selected location
-          timestamp: new Date().toISOString()
-        });
   
-        //Alert.alert('Success', 'Your attendance has been recorded in Firestore!');
-      } else {
-        Alert.alert('Error', 'Please select an option.');
-      }
+      const trackingRef = collection(db, 'tracking');
+  
+      // 1. Query existing entries by this user at this bar
+      const existingQuery = query(
+        trackingRef,
+        where('userId', '==', userId),
+        where('location.title', '==', selectedLocation.title)
+      );
+  
+      const existingSnapshot = await getDocs(existingQuery);
+  
+      // 2. Delete existing entries (ensures only one status at a time)
+      const deletionPromises = existingSnapshot.docs.map(doc => deleteDoc(doc.ref));
+      await Promise.all(deletionPromises);
+  
+      // 1. Remove "currentlyHere" entries for this user at any bar
+      if (currentlyHere) {
+        const globalQuery = query(
+          collection(db, 'tracking'),
+          where('userId', '==', userId),
+          where('currentlyHere', '==', true)
+        );
+
+        const globalSnapshot = await getDocs(globalQuery);
+
+        if (globalSnapshot.docs.length > 0) {
+          Alert.alert('Updated', 'Your previous check-in was removed and updated to the new bar.');
+        }
+
+        const removeOldCurrentlyHere = globalSnapshot.docs.map(doc => deleteDoc(doc.ref));
+        await Promise.all(removeOldCurrentlyHere);
+      }      
+
+      // 3. Add the new entry
+      await addDoc(trackingRef, {
+        userId,
+        currentlyHere,
+        planningToAttend,
+        location: selectedLocation,
+        timestamp: new Date().toISOString()
+      });
+  
+      // ✅ You could even give feedback:
+      // Alert.alert('Success', `You're now marked as ${currentlyHere ? 'currently here' : 'planning to attend'}.`);
+  
     } catch (error) {
-      console.error('Error adding document to Firestore:', error);
-      Alert.alert('Error', 'Failed to record attendance. Please try again.');
+      console.error('Error updating attendance:', error);
+      Alert.alert('Error', 'Could not update your status. Please try again.');
     } finally {
       setPinModalVisible(false);
       resetModal();
     }
   };
+  
 
 
   return (
