@@ -23,6 +23,8 @@ async function sendVerificationEmail(toEmail, verificationLink) {
           <p>Please verify your email by clicking 
             <a href="${verificationLink}">this link</a>.
           </p>
+          <br/>
+          <p style="font-size: 14px">– The BarBuzz Team 🐝</p>
         `,
       },
     ],

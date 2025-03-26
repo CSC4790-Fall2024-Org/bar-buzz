@@ -101,7 +101,7 @@ app.get('/verify', async (req, res) => {
             <p>Thanks for signing up. Time to Buzz In and Create the Scene.</p>
             <p>You can now return to the app and log in.</p>
             <br/>
-            <p style="font-size: 14px; color: #888;">– The BarBuzz Team 🐝</p>
+            <p style="font-size: 14px">– The BarBuzz Team 🐝</p>
           </body>
         </html>
       `);
